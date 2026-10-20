@@ -1,9 +1,11 @@
 // B3hind T3xt - Menu principal
-// Los botones se definen en coordenadas de la IMAGEN ORIGINAL (2754 x 1536),
+// Los botones se definen en coordenadas de la IMAGEN ORIGINAL (2356 x 1316),
 // asi funcionan en cualquier resolucion de pantalla.
 
 PImage fondo;
-Boton[] botones;     // 0 = JUGAR, 1 = CONFIGURACION, 2 = CREDITOS, 3 = SALIR
+Pantalla[] pantallas;    // 0 = MENU, 1 = JUEGO, 2 = CONFIGURACION, 3 = CREDITOS
+int actual = 0;          // posicion en la lista de la pantalla que se esta mostrando
+final int SALIR = -2;    // destino especial: cerrar el programa
 
 boolean debug = false;   // tecla D para ver los rectangulos rojos
 
@@ -19,14 +21,24 @@ void settings() {
 
 void setup() {
   fondo = loadImage("home.jpg");
-  calcularLayout();
 
-  // nombre, x, y, ancho, alto (pixeles de la imagen original)
-  botones = new Boton[4];
-  botones[0] = new Boton("JUGAR",         1395,  985, 492, 135, fondo);
-  botones[1] = new Boton("CONFIGURACION", 1302, 1158, 678, 134, fondo);
-  botones[2] = new Boton("CREDITOS",      1389, 1323, 496, 100, fondo);
-  botones[3] = new Boton("SALIR",         1389, 1455, 496,  81, fondo);  // en la imagen esta cortado por el borde inferior
+  // Todas las pantallas se crean aqui, antes de usarlas (si no, error de null)
+  pantallas = new Pantalla[4];
+
+  // MENU: nombre, imagen, cantidad de botones
+  pantallas[0] = new Pantalla("MENU", fondo, 4);
+  // nombre, x, y, ancho, alto (pixeles de la imagen original) y a que pantalla lleva
+  pantallas[0].Ponerboton(0, new Boton("JUGAR",         1176,  768, 424, 100, fondo), 1);
+  pantallas[0].Ponerboton(1, new Boton("CONFIGURACION", 1128,  888, 520,  96, fondo), 2);
+  pantallas[0].Ponerboton(2, new Boton("CREDITOS",      1176, 1000, 424, 100, fondo), 3);
+  pantallas[0].Ponerboton(3, new Boton("SALIR",         1176, 1116, 424,  96, fondo), SALIR);
+
+  // Las demas pantallas, por ahora sin botones (se vuelve al menu con ESC)
+  pantallas[1] = new Pantalla("JUEGO", fondo, 0);
+  pantallas[2] = new Pantalla("CONFIGURACION", fondo, 0);
+  pantallas[3] = new Pantalla("CREDITOS", fondo, 0);
+
+  calcularLayout();
 }
 
 void draw() {
@@ -34,29 +46,27 @@ void draw() {
   calcularLayout();
 
   // Fondo (sin deformar, centrado)
+  PImage f = pantallas[actual].fondo;
   imageMode(CORNER);
-  image(fondo, offsetX, offsetY, fondo.width * escalaFondo, fondo.height * escalaFondo);
+  image(f, offsetX, offsetY, f.width * escalaFondo, f.height * escalaFondo);
 
-  // Actualizar animaciones y detectar si el mouse esta sobre algun boton
-  boolean encima = false;
-  for (Boton b : botones) {
-    b.actualizar(mouseX, mouseY);
-    if (b.estaEncima(mouseX, mouseY)) encima = true;
+  // Animaciones, botones y cursor de la pantalla actual
+  pantallas[actual].draw();
+
+  // TEMPORAL: mientras las otras pantallas no tengan su propio diseno, se muestra su nombre
+  if (actual != 0) {
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(80);
+    text(pantallas[actual].nombre, width / 2, height / 2);
   }
-
-  // Dibujar botones
-  for (Boton b : botones) {
-    b.dibujar();
-  }
-
-  cursor(encima ? HAND : ARROW);
 
   if (debug) {
     rectMode(CORNER);
     stroke(255, 0, 0);
     noFill();
     strokeWeight(2);
-    for (Boton b : botones) {
+    for (Boton b : pantallas[actual].botones) {
       rect(b.pantallaX(), b.pantallaY(), b.pantallaW(), b.pantallaH());
     }
   }
@@ -64,40 +74,27 @@ void draw() {
 
 // Escala la imagen para que quepa en la pantalla manteniendo proporcion
 void calcularLayout() {
-  escalaFondo = min((float) width / fondo.width, (float) height / fondo.height);
-  offsetX = (width  - fondo.width  * escalaFondo) / 2;
-  offsetY = (height - fondo.height * escalaFondo) / 2;
+  PImage f = pantallas[actual].fondo;
+  escalaFondo = min((float) width / f.width, (float) height / f.height);
+  offsetX = (width  - f.width  * escalaFondo) / 2;
+  offsetY = (height - f.height * escalaFondo) / 2;
 }
 
 void mousePressed() {
-  for (int i = 0; i < botones.length; i++) {
-    if (botones[i].estaEncima(mouseX, mouseY)) {
-      botones[i].presionar();
-      accionBoton(i);
-    }
-  }
-}
-
-void accionBoton(int i) {
-  switch (i) {
-    case 0:
-      println("JUGAR");
-      // TODO: cambiar a la pantalla de juego
-      break;
-    case 1:
-      println("CONFIGURACION");
-      // TODO: cambiar a la pantalla de configuracion
-      break;
-    case 2:
-      println("CREDITOS");
-      // TODO: cambiar a la pantalla de creditos
-      break;
-    case 3:
-      exit();
-      break;
+  int destino = pantallas[actual].click();   // -1 si no se hizo click en ningun boton
+  if (destino == SALIR) {
+    exit();
+  } else if (destino >= 0) {
+    actual = destino;
   }
 }
 
 void keyPressed() {
   if (key == 'd' || key == 'D') debug = !debug;
+
+  // ESC vuelve al menu desde cualquier otra pantalla (key = 0 evita que cierre el programa)
+  if (key == ESC && actual != 0) {
+    actual = 0;
+    key = 0;
+  }
 }

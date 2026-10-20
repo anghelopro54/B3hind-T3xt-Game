@@ -30,7 +30,7 @@ class Boton {
   }
 
   void presionar() {
-    escala = 0.93;   // "hundimiento" al hacer click
+    escala = 0.93;   // hundimiento al hacer click
   }
 
   void actualizar(float mx, float my) {
