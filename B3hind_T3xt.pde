@@ -6,6 +6,8 @@ PImage fondo;
 Pantalla[] pantallas;    // 0 = MENU, 1 = JUEGO, 2 = CONFIGURACION, 3 = CREDITOS
 int actual = 0;          // posicion en la lista de la pantalla que se esta mostrando
 final int SALIR = -2;    // destino especial: cerrar el programa
+EfectoTv tv;             // variable global para efecto de tv antiguo
+PFont fuente;
 
 boolean debug = false;   // tecla D para ver los rectangulos rojos
 
@@ -17,9 +19,11 @@ float offsetY = 0;
 // fullScreen() debe ir en settings(), no en setup()
 void settings() {
   fullScreen();
+  pixelDensity(1);
 }
 
 void setup() {
+  fuente = createFont("pixel.ttf", 48);
   fondo = loadImage("home.jpg");
 
   // Todas las pantallas se crean aqui, antes de usarlas (si no, error de null)
@@ -36,7 +40,58 @@ void setup() {
   // Las demas pantallas, por ahora sin botones (se vuelve al menu con ESC)
   pantallas[1] = new Pantalla("JUEGO", fondo, 0);
   pantallas[2] = new Pantalla("CONFIGURACION", fondo, 0);
-  pantallas[3] = new Pantalla("CREDITOS", fondo, 0);
+
+  PGraphics fondoCreditos = createGraphics(1920, 1080);
+  fondoCreditos.beginDraw();
+  fondoCreditos.textFont(fuente);
+  fondoCreditos.textSize(48);
+  fondoCreditos.background(40, 30, 70);
+
+  fondoCreditos.fill(150, 179, 230);
+  fondoCreditos.stroke(20, 20, 60);
+  fondoCreditos.strokeWeight(6);
+  fondoCreditos.rect(1700, 43, 200, 65, 20);
+
+  fondoCreditos.fill(94, 104, 115);
+  fondoCreditos.stroke(38, 109, 191);
+  fondoCreditos.strokeWeight(40);
+  fondoCreditos.rectMode(CENTER);
+  fondoCreditos.rect(fondoCreditos.width/2, fondoCreditos.height/2, 1350, 950, 10);
+  fondoCreditos.rectMode(CORNER);
+
+  fondoCreditos.fill(70, 142, 224);
+  fondoCreditos.stroke(255);
+  fondoCreditos.strokeWeight(2);
+  fondoCreditos.rectMode(CENTER);
+  fondoCreditos.rect(1490, 66, 40, 30, 10);
+
+  fondoCreditos.fill(70, 142, 224);
+  fondoCreditos.stroke(255);
+  fondoCreditos.strokeWeight(2);
+  fondoCreditos.rectMode(CENTER);
+  fondoCreditos.rect(1540, 66, 40, 30, 10);
+
+  fondoCreditos.fill(250, 12, 12);
+  fondoCreditos.stroke(255);
+  fondoCreditos.strokeWeight(2);
+  fondoCreditos.rectMode(CENTER);
+  fondoCreditos.rect(1590, 66, 40, 30, 10);
+
+  fondoCreditos.fill(255);
+  fondoCreditos.textAlign(CENTER, CENTER);
+  fondoCreditos.textSize(30);
+  fondoCreditos.text("Creditos.exe", 390, 67);
+
+  fondoCreditos.fill(20, 20, 60);
+  fondoCreditos.textAlign(CENTER, CENTER);
+  fondoCreditos.textSize(37);
+  fondoCreditos.text("Volver", 1801, 75);
+  fondoCreditos.endDraw();
+
+  pantallas[3] = new Pantalla("Creditos", fondoCreditos, 1);
+  pantallas[3].Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondoCreditos), 0);
+
+  tv = new EfectoTv();
 
   calcularLayout();
 }
@@ -46,20 +101,14 @@ void draw() {
   calcularLayout();
 
   // Fondo (sin deformar, centrado)
-  PImage f = pantallas[actual].fondo;
+  PImage f = pantallas[actual].fondoEsc;
   imageMode(CORNER);
-  image(f, offsetX, offsetY, f.width * escalaFondo, f.height * escalaFondo);
+  int dy = round(sin(frameCount * 0.05) * 1.5);
+  image(f, offsetX, offsetY + dy);
 
   // Animaciones, botones y cursor de la pantalla actual
   pantallas[actual].draw();
 
-  // TEMPORAL: mientras las otras pantallas no tengan su propio diseno, se muestra su nombre
-  if (actual != 0) {
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(80);
-    text(pantallas[actual].nombre, width / 2, height / 2);
-  }
 
   if (debug) {
     rectMode(CORNER);
@@ -70,6 +119,20 @@ void draw() {
       rect(b.pantallaX(), b.pantallaY(), b.pantallaW(), b.pantallaH());
     }
   }
+  tv.dibujar();
+  println(frameRate);
+
+  if (debug) {
+  pushStyle();
+  fill(255, 255, 0);
+  textAlign(LEFT, TOP);
+  textSize(24);
+  float imgX = (mouseX - offsetX) / escalaFondo;
+  float imgY = (mouseY - offsetY) / escalaFondo;
+  text("Ventana: " + mouseX + ", " + mouseY, 20, 20);
+  text("Imagen:  " + int(imgX) + ", " + int(imgY), 20, 50);
+  popStyle();
+}
 }
 
 // Escala la imagen para que quepa en la pantalla manteniendo proporcion
