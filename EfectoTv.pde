@@ -1,4 +1,4 @@
-  class EfectoTv {
+class EfectoTv {
   int esp = 8; 
   int grosor = 3;
   
