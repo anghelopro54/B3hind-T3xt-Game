@@ -128,19 +128,6 @@ PGraphics crearEscenaEmail() {
   PImage img = loadImage("Mail Background.jpg");
   if (img != null) imagenCover(pg, img);
 
-  // parches (x0, y0, x1, y1) en coordenadas del canvas, con el color plano de cada zona
-  pg.noStroke();
-  pg.rectMode(CORNERS);
-  pg.fill(188, 189, 222);                          // cabecera lavanda
-  pg.rect(645, 411, 1348, 503);
-  pg.rect(645, 506, 1441, 551);
-  pg.fill(245, 252, 252);                          // cuerpo blanco
-  pg.rect(645, 568, 1506, 745);
-  pg.rect(645, 745, 1418, 782);
-  pg.fill(244, 251, 251);                          // filas de la bandeja
-  pg.rect(755, 315, 1517, 345);
-  pg.rect(755, 350, 1517, 378);
-  pg.rectMode(CORNER);
 
   pg.textFont(fuente);
   pg.fill(20, 20, 50);
@@ -148,7 +135,7 @@ PGraphics crearEscenaEmail() {
   pg.textSize(30);
   pg.text("De: Confianza y Seguridad", 652, 432);
   pg.text("Para: Ivana Rios", 652, 479);
-  pg.text("Asunto: URGENTE - Aumento de comentarios toxicos", 652, 527);
+  pg.text("Asunto: URGENTE - Aumento de comentarios tóxicos", 652, 527);
   pg.textSize(28);
   pg.text("URGENTE - Aumento de comentarios toxicos", 788, 330);
   pg.text("Bienvenida a Vinculo - Equipo de Confianza", 788, 364);
