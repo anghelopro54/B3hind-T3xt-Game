@@ -38,146 +38,11 @@ void setup() {
   pantallas[0].Ponerboton(3, new Boton("SALIR",         1176, 1116, 424,  96, fondo), SALIR);
 
   // Las demas pantallas, por ahora sin botones (se vuelve al menu con ESC)
-  pantallas[1] = new Pantalla("JUEGO", fondo, 0);
+  pantallas[1] = new PantallaJuego();
+  pantallas[2] =  new PantallaConfiguracion();
+  pantallas[3] = new PantallaCreditos();
 
-  PGraphics fondoCreditos = createGraphics(1920, 1080);
-  PGraphics fondoConfiguracion = createGraphics(1920, 1080);
-
-  fondoCreditos.beginDraw();
-  fondoCreditos.textFont(fuente);
-  fondoCreditos.textSize(48);
-  fondoCreditos.background(40, 30, 70);
-
-  fondoCreditos.fill(150, 179, 230);
-  fondoCreditos.stroke(20, 20, 60);
-  fondoCreditos.strokeWeight(6);
-  fondoCreditos.rect(1700, 43, 200, 65, 20);
-
-  fondoCreditos.fill(94, 104, 115);
-  fondoCreditos.stroke(38, 109, 191);
-  fondoCreditos.strokeWeight(40);
-  fondoCreditos.rectMode(CENTER);
-  fondoCreditos.rect(fondoCreditos.width/2, fondoCreditos.height/2, 1350, 950, 10);
-  fondoCreditos.rectMode(CORNER);
-
-  fondoCreditos.fill(70, 142, 224);
-  fondoCreditos.stroke(255);
-  fondoCreditos.strokeWeight(2);
-  fondoCreditos.rectMode(CENTER);
-  fondoCreditos.rect(1490, 66, 40, 30, 10);
-
-  fondoCreditos.fill(70, 142, 224);
-  fondoCreditos.stroke(255);
-  fondoCreditos.strokeWeight(2);
-  fondoCreditos.rectMode(CENTER);
-  fondoCreditos.rect(1540, 66, 40, 30, 10);
-
-  fondoCreditos.fill(250, 12, 12);
-  fondoCreditos.stroke(255);
-  fondoCreditos.strokeWeight(2);
-  fondoCreditos.rectMode(CENTER);
-  fondoCreditos.rect(1590, 66, 40, 30, 10);
-
-  fondoCreditos.fill(255);
-  fondoCreditos.textAlign(CENTER, CENTER);
-  fondoCreditos.textSize(30);
-  fondoCreditos.text("Creditos.exe", 390, 67);
-
-      //Dibujo de las ventanas y boton de la pantalla creditos
-  String[] nombres = {"Anghelo Ospino", "Samantha Pertuz", "Claude"};
-  String[] descripciones = {
-    "Backend & integrator",
-    "Frontend & integrator",
-    "Graphic designer & programmer"
-  };
-  float w = 380, h = 560, espacio = 45;
-  float x0 = (fondoCreditos.width - (3 * w + 2 * espacio)) / 2;
-  float y0 = (fondoCreditos.height - h) / 2;
-
-  fondoCreditos.rectMode(CORNER);
-
-  for(int i = 0; i < 3; i++){
-    float x = x0 + i * (w + espacio);
-
-    //banner
-    fondoCreditos.fill(150, 170, 230);
-    fondoCreditos.stroke(20, 20, 60);
-    fondoCreditos.strokeWeight(6);
-    fondoCreditos.rect(x, y0, w, h, 20);
-
-    //nombre
-    fondoCreditos.fill(20, 20, 60);
-    fondoCreditos.textFont(fuente);
-    fondoCreditos.textAlign(CENTER, TOP);
-    fondoCreditos.textSize(36);
-    fondoCreditos.text(nombres[i], x + 20, y0 + 40, w - 40, 80);
-
-    //descripcion
-    fondoCreditos.textSize(28);
-    fondoCreditos.text(descripciones[i], x + 20, y0 + 150, w - 40, h - 190);
-
-  }
-
-  fondoCreditos.fill(20, 20, 60);
-  fondoCreditos.textAlign(CENTER, CENTER);
-  fondoCreditos.textSize(37);
-  fondoCreditos.text("Volver", 1801, 75);
-  fondoCreditos.endDraw();
-
-  //Dibujo de la ventana y botones de la pantalla configuracion
-  fondoConfiguracion.beginDraw();
-  fondoConfiguracion.textFont(fuente);
-  fondoConfiguracion.textSize(48);
-  fondoConfiguracion.background(40, 30, 70);
-
-  fondoConfiguracion.fill(150, 179, 230);
-  fondoConfiguracion.stroke(20, 20, 60);
-  fondoConfiguracion.strokeWeight(6);
-  fondoConfiguracion.rect(1700, 43, 200, 65, 20);
-
-  fondoConfiguracion.fill(94, 104, 115);
-  fondoConfiguracion.stroke(38, 109, 191);
-  fondoConfiguracion.strokeWeight(40);
-  fondoConfiguracion.rectMode(CENTER);
-  fondoConfiguracion.rect(fondoConfiguracion.width/2, fondoConfiguracion.height/2, 1350, 950, 10);
-  fondoConfiguracion.rectMode(CORNER);
-
-  fondoConfiguracion.fill(70, 142, 224);
-  fondoConfiguracion.stroke(255);
-  fondoConfiguracion.strokeWeight(2);
-  fondoConfiguracion.rectMode(CENTER);
-  fondoConfiguracion.rect(1490, 66, 40, 30, 10);
-
-  fondoConfiguracion.fill(70, 142, 224);
-  fondoConfiguracion.stroke(255);
-  fondoConfiguracion.strokeWeight(2);
-  fondoConfiguracion.rectMode(CENTER);
-  fondoConfiguracion.rect(1540, 66, 40, 30, 10);
-
-  fondoConfiguracion.fill(250, 12, 12);
-  fondoConfiguracion.stroke(255);
-  fondoConfiguracion.strokeWeight(2);
-  fondoConfiguracion.rectMode(CENTER);
-  fondoConfiguracion.rect(1590, 66, 40, 30, 10);
-
-  fondoConfiguracion.fill(255);
-  fondoConfiguracion.textAlign(CENTER, CENTER);
-  fondoConfiguracion.textSize(30);
-  fondoConfiguracion.text("Configuracion.exe", 440, 67);
-
-  fondoConfiguracion.fill(20, 20, 60);
-  fondoConfiguracion.textAlign(CENTER, CENTER);
-  fondoConfiguracion.textSize(37);
-  fondoConfiguracion.text("Volver", 1801, 75);
-  fondoConfiguracion.endDraw();
-
-
-  pantallas[2] = new Pantalla("CONFIGURACION", fondoConfiguracion, 1);
-  pantallas[2].Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondoConfiguracion), 0);
-
-  pantallas[3] = new Pantalla("Creditos", fondoCreditos, 1);
-  pantallas[3].Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondoCreditos), 0);
-
+ 
   tv = new EfectoTv();
 
   calcularLayout();
@@ -236,6 +101,7 @@ void mousePressed() {
     exit();
   } else if (destino >= 0) {
     actual = destino;
+    pantallas[actual].reiniciar();
   }
 }
 
