@@ -47,44 +47,57 @@ class Pantalla {
   void reiniciar(){ }
 }
 
+// version corta: la que ya usas (fondo de color plano)
 void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver){
-    pg.textFont(fuente);
-    pg.background(40, 30, 70);
+    ventanaxp(pg, titulo, xTitulo, volver, null);
+}
 
-    if(volver){
-    pg.rectMode(CORNER);
-    pg.fill(150, 179, 230);
-    pg.stroke(20, 20, 60);
-    pg.strokeWeight(6);
-    pg.rect(1700, 43, 200, 65, 20);
-    pg.fill(20, 20 , 60);
-    pg.textAlign(CENTER, CENTER);
-    pg.textSize(37);
-    pg.text("Volver", 1801, 75);
+// version con imagen de fondo (si fondoImg es null, usa el color plano)
+void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver, PImage fondoImg){
+    pg.textFont(fuente);
+    if (fondoImg != null) imagenCover(pg, fondoImg);
+    else pg.background(40, 30, 70);
+
+    // tamano de la ventana y cuanto se encogio respecto a la original (1350 x 950)
+    float vw = 1100, vh = 800;
+    float dx = (1350 - vw) / 2;     // 125
+    float dy = (950 - vh) / 2;      // 75
+
+    if (volver) {
+      pg.rectMode(CORNER);
+      pg.fill(150, 179, 230);
+      pg.stroke(20, 20, 60);
+      pg.strokeWeight(6);
+      pg.rect(1700, 43, 200, 65, 20);
+      pg.fill(20, 20, 60);
+      pg.textAlign(CENTER, CENTER);
+      pg.textSize(37);
+      pg.text("Volver", 1801, 75);
     }
 
     pg.rectMode(CENTER);
     pg.fill(94, 104, 115);
-    pg.stroke(38, 109, 191);
+    pg.stroke(140, 70, 200);                 // borde morado (cambia aqui el color)
     pg.strokeWeight(40);
-    pg.rect(pg.width / 2, pg.height / 2, 1350, 950, 10);
+    pg.rect(pg.width / 2, pg.height / 2, vw, vh, 10);
 
+    // botones de la barra de titulo (siguen la esquina superior derecha de la ventana)
     pg.stroke(255);
     pg.strokeWeight(2);
     pg.fill(70, 142, 224);
-    pg.rect(1490, 66, 40, 30, 10);
-    pg.rect(1540, 66, 40, 30, 10);
+    pg.rect(1490 - dx, 66 + dy, 40, 30, 10);
+    pg.rect(1540 - dx, 66 + dy, 40, 30, 10);
     pg.fill(250, 12, 12);
-    pg.rect(1590, 66, 40, 30, 10);
+    pg.rect(1590 - dx, 66 + dy, 40, 30, 10);
 
+    // titulo (sigue la esquina superior izquierda)
     pg.fill(255);
     pg.textAlign(CENTER, CENTER);
     pg.textSize(30);
-    pg.text(titulo, xTitulo, 67);
+    pg.text(titulo, xTitulo + dx, 67 + dy);
 
     pg.rectMode(CORNER);
-
-  }
+}
 
   PImage escalarPantalla(PImage img){
     float esc = min((float) width / img.width, (float) height / img.height);
@@ -94,4 +107,3 @@ void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver){
     return copia;
 
   }
-

@@ -10,7 +10,17 @@ class PantallaCreditos extends Pantalla {
 PGraphics crearFondoCreditos() {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
-  ventanaxp(pg, "Creditos.exe", 390, true);
+  
+  // Cargar y dibujar la imagen de fondo "Ventanas.jpg" a pantalla completa usando imagenCover
+  PImage fondoVentanas = loadImage("Ventanas.jpg");
+  if (fondoVentanas != null) {
+    imagenCover(pg, fondoVentanas);
+  } else {
+    pg.background(40, 30, 70); // Color de respaldo por si llegara a faltar la imagen
+  }
+
+  // Dibuja la ventana XP de créditos encima del nuevo fondo
+  ventanaxp(pg, "Creditos.exe", 390, true, loadImage("Ventanas.jpg"));
 
   String[] nombres = {"Anghelo Ospino", "Samantha Pertuz", "Claude", "Gemini"};
   String[] descripciones = {
@@ -24,11 +34,11 @@ PGraphics crearFondoCreditos() {
 
   // Distribucion: n tarjetas del mismo tamano, centradas dentro de la ventana
   int n = nombres.length;
-  float w = 280, h = 450, espacio = 40;
-  float foto = 240;                                           // lado de la foto (cuadrada)
-  float x0 = (pg.width - (n * w + (n - 1) * espacio)) / 2;    // para que el conjunto quede centrado
+  float w = 230, h = 420, espacio = 25;
+  float foto = 200;
+  float x0 = (pg.width - (n * w + (n - 1) * espacio)) / 2;
   float y0 = (pg.height - h) / 2;
-
+  
   for (int i = 0; i < n; i++) {
     float x = x0 + i * (w + espacio);
 
@@ -54,12 +64,12 @@ PGraphics crearFondoCreditos() {
     //nombre
     pg.fill(20, 20, 60);
     pg.textAlign(CENTER, TOP);
-    pg.textSize(28);
-    pg.text(nombres[i], x + 20, y0 + 290, w - 40, 50);
+    pg.textSize(22);
+    pg.text(nombres[i], x + 10, y0 + 250, w - 20, 40);
 
     //descripcion
-    pg.textSize(24);
-    pg.text(descripciones[i], x + 20, y0 + 350, w - 40, 90);
+    pg.textSize(20);
+    pg.text(descripciones[i], x + 15, y0 + 300, w - 30, 100);
   }
 
   pg.endDraw();
