@@ -37,6 +37,7 @@ class PantallaJuego extends Pantalla {
   int click() {
     if (cinematica) {
       avanzar();
+      if(!cinematica) return 4;
       return -1;
     }
     return super.click();

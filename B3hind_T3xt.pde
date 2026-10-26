@@ -9,6 +9,8 @@ final int SALIR = -2;    // destino especial: cerrar el programa
 EfectoTv tv;             // variable global para efecto de tv antiguo
 PFont fuente;
 
+int configVolverA = 0;     // si es > 0, el boton Volver de Configuracion regresa a esa pantalla (la pausa del Modo 1)
+
 boolean debug = false;   // tecla D para ver los rectangulos rojos
 
 // Posicion y escala con la que se dibuja el fondo (se recalculan en calcularLayout)
@@ -27,7 +29,7 @@ void setup() {
   fondo = loadImage("home.jpg");
 
   // Todas las pantallas se crean aqui, antes de usarlas (si no, error de null)
-  pantallas = new Pantalla[4];
+  pantallas = new Pantalla[9];
 
   // MENU: nombre, imagen, cantidad de botones
   pantallas[0] = new Pantalla("MENU", fondo, 4);
@@ -41,6 +43,16 @@ void setup() {
   pantallas[1] = new PantallaJuego();
   pantallas[2] =  new PantallaConfiguracion();
   pantallas[3] = new PantallaCreditos();
+  pantallas[4] = new PantallaModosJuego();
+  pantallas[5] = new Modo1();
+  pantallas[6] = new PantallaInstrucciones(  "MODO 1: FLAGGED & FILTERED",
+  new String[] {
+    "Verás caer mensajes de distintos usuarios. Tu misión: leerlos y clasificarlos ANTES de que lleguen al final de la pantalla.",
+    "[B]  Bloquear (mensaje tóxico)",
+    "[A]  Aprobar (mensaje sano)",
+    "Cuando lleves 4 mensajes bloqueados, pulsa [R] para REPORTAR y ganar puntos de bienestar."
+  },
+  5);
 
  
   tv = new EfectoTv();
@@ -110,7 +122,18 @@ void keyPressed() {
 
   // ESC vuelve al menu desde cualquier otra pantalla (key = 0 evita que cierre el programa)
   if (key == ESC && actual != 0) {
-    actual = 0;
+    if (pantallas[actual].capturaEsc()) {
+      pantallas[actual].tecla(ESC);          // el Modo 1 abre/cierra la pausa
+    } else if (actual == 2 && configVolverA > 0) {
+      actual = configVolverA;                // Configuracion abierta desde la pausa: regresa a la partida
+      configVolverA = 0;
+      pantallas[actual].reiniciar();
+    } else {
+      actual = 0;
+    }
     key = 0;
   }
+
+  // la pantalla actual recibe la tecla (el Modo 1 usa B, A y R)
+  pantallas[actual].tecla(key);
 }
