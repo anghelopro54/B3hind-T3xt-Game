@@ -27,12 +27,12 @@ void setup() {
   fondo = loadImage("home.jpg");
 
   // Todas las pantallas se crean aqui, antes de usarlas (si no, error de null)
-  pantallas = new Pantalla[4];
+  pantallas = new Pantalla[5];
 
   // MENU: nombre, imagen, cantidad de botones
   pantallas[0] = new Pantalla("MENU", fondo, 4);
   // nombre, x, y, ancho, alto (pixeles de la imagen original) y a que pantalla lleva
-  pantallas[0].Ponerboton(0, new Boton("JUGAR",         1176,  768, 424, 100, fondo), 1);
+  pantallas[0].Ponerboton(0, new Boton("JUGAR",         1176,  768, 424, 100, fondo), 4);
   pantallas[0].Ponerboton(1, new Boton("CONFIGURACION", 1128,  888, 520,  96, fondo), 2);
   pantallas[0].Ponerboton(2, new Boton("CREDITOS",      1176, 1000, 424, 100, fondo), 3);
   pantallas[0].Ponerboton(3, new Boton("SALIR",         1176, 1116, 424,  96, fondo), SALIR);
@@ -41,7 +41,7 @@ void setup() {
   pantallas[1] = new PantallaJuego();
   pantallas[2] =  new PantallaConfiguracion();
   pantallas[3] = new PantallaCreditos();
-
+ pantallas[4] = new PantallaModosJuego();
  
   tv = new EfectoTv();
 
