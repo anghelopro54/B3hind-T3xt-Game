@@ -54,13 +54,47 @@ class PantallaModosJuego extends Pantalla {
   }
 }
 
-// Fondo: Modo de juego.jpg a pantalla completa (usa imagenCover de PantallaJuego.pde)
+// Dibuja una imagen llenando un rectangulo (x, y, w, h) del PGraphics sin deformarla:
+// recorta el sobrante centrado (como imagenCover, pero para una zona).
+void imagenEnRect(PGraphics pg, PImage img, float x, float y, float w, float h) {
+  float aspRect = w / h;
+  float aspImg = (float) img.width / img.height;
+  int sw, sh;
+  if (aspImg > aspRect) { sh = img.height; sw = round(img.height * aspRect); }   // sobra ancho
+  else                  { sw = img.width;  sh = round(img.width / aspRect); }    // sobra alto
+  PImage recorte = img.get((img.width - sw) / 2, (img.height - sh) / 2, sw, sh);
+  pg.imageMode(CORNER);
+  pg.image(recorte, x, y, w, h);
+}
+
+// Fondo: Modo de juego.jpg + portada del primer modo + titulo
 PGraphics crearFondoModos() {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
   pg.background(40, 30, 70);                      // por si falta la imagen
   PImage img = loadImage("Modo de juego.jpg");
   if (img != null) imagenCover(pg, img);
+
+  // --- Primer modo: portada dentro del cuadrado blanco de la ventana izquierda ---
+  float px = 277, py = 272, pw = 427, ph = 372;
+  PImage portada = loadImage("PrimerModo.jpg");
+  if (portada != null) imagenEnRect(pg, portada, px, py, pw, ph);
+
+  // titulo debajo de la portada: blanco con contorno oscuro (estilo Y2K)
+  String titulo = "FLAGGED & FILTERED";
+  float tx = px + pw / 2, ty = 700;
+  pg.textFont(fuente);
+  pg.textSize(38);
+  pg.textAlign(CENTER, CENTER);
+  pg.fill(20, 20, 60);
+  for (int dx = -3; dx <= 3; dx += 3) {
+    for (int dy = -3; dy <= 3; dy += 3) {
+      if (dx != 0 || dy != 0) pg.text(titulo, tx + dx, ty + dy);   // contorno
+    }
+  }
+  pg.fill(255);
+  pg.text(titulo, tx, ty);
+
   pg.endDraw();
   return pg;
 }
