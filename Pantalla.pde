@@ -45,6 +45,11 @@ class Pantalla {
   }
 
   void reiniciar(){ }
+
+  void tecla(char k){ }
+
+  // true si la pantalla quiere manejar ESC ella misma (el Modo 1 lo usa para la pausa)
+  boolean capturaEsc(){ return false; }
 }
 
 // version corta: la que ya usas (fondo de color plano)

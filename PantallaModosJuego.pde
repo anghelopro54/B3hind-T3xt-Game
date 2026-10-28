@@ -10,7 +10,7 @@ class PantallaModosJuego extends Pantalla {
 
   // A que pantalla lleva cada modo (indice en pantallas[]). -1 = todavia no hace nada.
   // Cuando crees las pantallas de los otros modos, cambia el -1 por su indice.
-  int[] destinosModo = {1, -1, -1};
+  int[] destinosModo = {6, -1, -1};
 
   PantallaModosJuego() {
     super("MODOS", crearFondoModos(), 0);   // 0 botones: usamos las zonas de arriba
