@@ -13,6 +13,10 @@ class Avatar {
   float umbralFeliz = 60;          // bienestar >= 60  -> feliz
   float umbralConfundida = 30;     // bienestar >= 30  -> confundida; menos -> frustrada
 
+  // Reaccion temporal: mientras sea >= 0 se muestra esa cara sin importar el bienestar
+  // (el Modo 3 la usa al acertar / fallar). -1 = sin reaccion, manda el bienestar.
+  int reaccion = -1;
+
   PImage[] imagenes = new PImage[3];
   String[] nombres = {"FELIZ", "CONFUNDIDA", "FRUSTRADA"};
 
@@ -41,8 +45,20 @@ class Avatar {
     return FRUSTRADA;
   }
 
+  // Cara que se esta mostrando: la reaccion si hay una, si no la del bienestar
+  int estadoMostrado() {
+    return (reaccion >= 0) ? reaccion : estado();
+  }
+
+  void reaccionar(int cara) { reaccion = cara; }
+  void limpiarReaccion() { reaccion = -1; }
+
+  // Color segun el bienestar (barras del HUD)
   color colorEstado() {
-    int e = estado();
+    return colorDe(estado());
+  }
+
+  color colorDe(int e) {
     if (e == FELIZ) return color(90, 220, 120);
     if (e == CONFUNDIDA) return color(255, 200, 80);
     return color(240, 70, 70);
@@ -60,23 +76,23 @@ class Avatar {
 
     // recuadro (el borde cambia de color con el estado)
     fill(10, 10, 30, 235);
-    stroke(colorEstado());
+    stroke(colorDe(estadoMostrado()));
     strokeWeight(5 * escalaFondo);
     rect(sx, sy, s, s, 12 * escalaFondo);
 
     // cara
-    PImage img = imagenes[estado()];
+    PImage img = imagenes[estadoMostrado()];
     if (img != null) image(img, sx + b, sy + b, s - 2 * b, s - 2 * b);
 
     // etiqueta con el nombre del estado
     noStroke();
     fill(10, 10, 30, 200);
     rect(sx + b, sy + s - b - 30 * escalaFondo, s - 2 * b, 30 * escalaFondo);
-    fill(colorEstado());
+    fill(colorDe(estadoMostrado()));
     textFont(fuente);
     textAlign(CENTER, CENTER);
     textSize(20 * escalaFondo);
-    text(nombres[estado()], sx + s / 2, sy + s - b - 15 * escalaFondo);
+    text(nombres[estadoMostrado()], sx + s / 2, sy + s - b - 15 * escalaFondo);
     popStyle();
   }
 }

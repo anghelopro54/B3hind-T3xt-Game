@@ -3,7 +3,8 @@
 // asi funcionan en cualquier resolucion de pantalla.
 
 PImage fondo;
-Pantalla[] pantallas;    // 0 = MENU, 1 = JUEGO, 2 = CONFIGURACION, 3 = CREDITOS
+Pantalla[] pantallas;    // 0 = MENU, 1 = JUEGO, 2 = CONFIGURACION, 3 = CREDITOS, 4 = MODOS, 5 = MODO 1,
+                         // 6 = INSTRUCCIONES MODO 1, 7 = INSTRUCCIONES MODO 3, 8 = MODO 3 (DE-ESCALATE!)
 int actual = 0;          // posicion en la lista de la pantalla que se esta mostrando
 final int SALIR = -2;    // destino especial: cerrar el programa
 EfectoTv tv;             // variable global para efecto de tv antiguo
@@ -54,7 +55,17 @@ void setup() {
     },
     5
   );
- 
+  pantallas[7] = new PantallaInstrucciones("MODO 3: DE-ESCALATE!",
+    new String[] {
+      "Estalla un conflicto en Vínculo. Ivana debe calmarlo antes de que escale.",
+      "[A] [B] [C]  Elige tu respuesta (o haz clic en ella).",
+      "Solo una es asertiva: no insulta ni ignora. Acertar suma bienestar; fallar lo resta.",
+      "Calma 5 conflictos para ganar."
+    },
+    8
+  );
+  pantallas[8] = new Modo3();
+
   tv = new EfectoTv();
 
   calcularLayout();

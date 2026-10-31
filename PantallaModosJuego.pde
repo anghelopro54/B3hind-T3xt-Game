@@ -10,7 +10,7 @@ class PantallaModosJuego extends Pantalla {
 
   // A que pantalla lleva cada modo (indice en pantallas[]). -1 = todavia no hace nada.
   // Cuando crees las pantallas de los otros modos, cambia el -1 por su indice.
-  int[] destinosModo = {6, -1, -1};
+  int[] destinosModo = {6, -1, 7};      // 6 = instrucciones Modo 1, 7 = instrucciones Modo 3 (De-escalate!)
 
   PantallaModosJuego() {
     super("MODOS", crearFondoModos(), 0);   // 0 botones: usamos las zonas de arriba
@@ -67,7 +67,7 @@ void imagenEnRect(PGraphics pg, PImage img, float x, float y, float w, float h) 
   pg.image(recorte, x, y, w, h);
 }
 
-// Fondo: Modo de juego.jpg + portada del primer modo + titulo
+// Fondo: Modo de juego.jpg + portadas (primer y tercer modo) + titulos
 PGraphics crearFondoModos() {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
@@ -80,9 +80,21 @@ PGraphics crearFondoModos() {
   PImage portada = loadImage("PrimerModo.jpg");
   if (portada != null) imagenEnRect(pg, portada, px, py, pw, ph);
 
-  // titulo debajo de la portada: blanco con contorno oscuro (estilo Y2K)
-  String titulo = "FLAGGED & FILTERED";
-  float tx = px + pw / 2, ty = 700;
+  tituloModo(pg, "FLAGGED & FILTERED", px + pw / 2, 700);
+
+  // --- Tercer modo: portada dentro del cuadrado blanco de la ventana derecha ---
+  // (medidas calculadas a partir de la ventana izquierda; si no calzan, ajusta p3x, p3y, p3w, p3h)
+  float p3x = 1249, p3y = 268, p3w = 425, p3h = 372;
+  PImage portada3 = cargarImagenAlguna(new String[] {"fondo_modo3.jpg", "fondo_modo3.png", "Fondo_modo3.jpg", "Fondo_modo3.png"});
+  if (portada3 != null) imagenEnRect(pg, portada3, p3x, p3y, p3w, p3h);
+  tituloModo(pg, "DE-ESCALATE!", p3x + p3w / 2, 696);
+
+  pg.endDraw();
+  return pg;
+}
+
+// Titulo de un modo debajo de su portada: blanco con contorno oscuro (estilo Y2K)
+void tituloModo(PGraphics pg, String titulo, float tx, float ty) {
   pg.textFont(fuente);
   pg.textSize(38);
   pg.textAlign(CENTER, CENTER);
@@ -94,7 +106,4 @@ PGraphics crearFondoModos() {
   }
   pg.fill(255);
   pg.text(titulo, tx, ty);
-
-  pg.endDraw();
-  return pg;
 }
