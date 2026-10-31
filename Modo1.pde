@@ -29,6 +29,8 @@ class Modo1 extends Pantalla {
   ArrayList<Mensaje> mensajes = new ArrayList<Mensaje>();
   int estado = JUGANDO;
   int puntos = 0;
+  int fondoAplicado = 0;
+  boolean pagado = false;               // true cuando ya se depositaron los puntos de esta partida
   int bloqueados = 0;
   int ultimoMs = 0;
   int proximoSpawn = 0;
@@ -99,7 +101,8 @@ class Modo1 extends Pantalla {
   };
 
   Modo1() {
-    super("MODO 1", crearFondoModo1(), 0);
+    super("MODO 1", crearFondoModo1(invent.equipado[FONDO_M1]), 0);
+    fondoAplicado = invent.equipado[FONDO_M1];     // primera línea después del super
     float hueco = (campoW - 24 - carriles.length * msgW) / (carriles.length - 1);
     for (int i = 0; i < carriles.length; i++) carriles[i] = campoX + 12 + i * (msgW + hueco);
     avatar = new Avatar(40, 1080 - 40 - 250, 250, 80);
@@ -107,6 +110,12 @@ class Modo1 extends Pantalla {
   }
 
   void reiniciar() {
+    int f = invent.equipado[FONDO_M1];
+    if (f != fondoAplicado) {
+      ponerFondo(crearFondoModo1(f));
+      fondoAplicado = f;
+    }
+    pagado = false;
     // al volver de Configuracion (abierta desde la pausa) se conserva la partida
     if (volviendoDeConfig) {
       volviendoDeConfig = false;
@@ -158,6 +167,12 @@ class Modo1 extends Pantalla {
 
     if (puntos >= META_PUNTOS) estado = VICTORIA;
     else if (avatar.bienestar <= 0) estado = DERROTA;
+
+    // depositar una sola vez cuando termina la partida
+    if (estado != JUGANDO && !pagado) {
+      billetera.ganar(puntos);
+      pagado = true;
+    }
   }
 
   // Crea un mensaje nuevo en un carril libre
@@ -169,7 +184,10 @@ class Modo1 extends Pantalla {
     int elegido = -1;
     for (int k = 0; k < carriles.length; k++) {
       int c = (carril + k) % carriles.length;
-      if (carrilLibre(carriles[c])) { elegido = c; break; }
+      if (carrilLibre(carriles[c])) {
+        elegido = c;
+        break;
+      }
     }
     if (elegido < 0) return;
 
@@ -426,12 +444,19 @@ class Modo1 extends Pantalla {
 }
 
 // Fondo del modo 1: PrimerModo.jpg a pantalla completa (usa imagenCover de PantallaJuego.pde)
-PGraphics crearFondoModo1() {
+PGraphics crearFondoModo1(int variante) {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
-  pg.background(40, 30, 70);                      // por si falta la imagen
-  PImage img = loadImage("PrimerModo.jpg");
+  pg.background(40, 30, 70);
+  String sufijo = (variante == 0) ? "" : "_" + (variante + 1);          // PrimerModo_2.jpg, PrimerModo_3.jpg
+  PImage img = cargarImagenAlguna(new String[] {"PrimerModo" + sufijo + ".jpg", "PrimerModo" + sufijo + ".png"});
+  if (img == null) {                                                    // si aún no tienes la imagen: la original con otro tinte
+    img = loadImage("PrimerModo.jpg");
+    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}};
+    pg.tint(tintes[variante][0], tintes[variante][1], tintes[variante][2]);
+  }
   if (img != null) imagenCover(pg, img);
+  pg.noTint();
   pg.endDraw();
   return pg;
 }

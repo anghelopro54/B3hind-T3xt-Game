@@ -3,8 +3,8 @@
 class PantallaModosJuego extends Pantalla {
   // Zonas en coordenadas del canvas 1920x1080: {x, y, ancho, alto}
   float[][] zonas = {
-    { 260, 221, 456, 588},   // 0: ventana izquierda -> Primer modo
-    { 746, 205, 452, 654},   // 1: ventana central   -> Segundo modo
+    { 260, 221, 456, 588}, // 0: ventana izquierda -> Primer modo
+    { 746, 205, 452, 654}, // 1: ventana central   -> Segundo modo
     {1232, 217, 454, 592}    // 2: ventana derecha   -> Tercer modo
   };
 
@@ -29,6 +29,13 @@ class PantallaModosJuego extends Pantalla {
     return -1;
   }
 
+  // Boton "Tienda" arriba a la derecha (canvas: x 1700, y 43, 200 x 65, igual que "Volver")
+  boolean botonTiendaEncima() {
+    float e = escalaFondo;
+    return mouseX >= offsetX + 1700 * e && mouseX <= offsetX + 1900 * e
+      && mouseY >= offsetY + 43 * e && mouseY <= offsetY + 108 * e;
+  }
+
   void draw() {
     int z = zonaEncima();
     cursor(z >= 0 ? HAND : ARROW);
@@ -39,15 +46,34 @@ class PantallaModosJuego extends Pantalla {
     for (int i = 0; i < zonas.length; i++) {
       boolean visible = (i == z) || debug;            // resalte suave al pasar el mouse (o todas con D)
       if (!visible) continue;
-      if (debug) { stroke(255, 0, 0); strokeWeight(2); }
-      else       { stroke(255, 255, 255, 200); strokeWeight(4); }
+      if (debug) {
+        stroke(255, 0, 0);
+        strokeWeight(2);
+      } else {
+        stroke(255, 255, 255, 200);
+        strokeWeight(4);
+      }
       rect(offsetX + zonas[i][0] * escalaFondo, offsetY + zonas[i][1] * escalaFondo,
-           zonas[i][2] * escalaFondo, zonas[i][3] * escalaFondo, 6);
+        zonas[i][2] * escalaFondo, zonas[i][3] * escalaFondo, 6);
     }
+    float e = escalaFondo;
+    boolean sobreTienda = botonTiendaEncima();
+    fill(sobreTienda ? color(200, 220, 255) : color(150, 179, 230));
+    stroke(20, 20, 60);
+    strokeWeight(6 * e);
+    rect(offsetX + 1700 * e, offsetY + 43 * e, 200 * e, 65 * e, 20 * e);
+    fill(20, 20, 60);
+    noStroke();
+    textFont(fuente);
+    textAlign(CENTER, CENTER);
+    textSize(34 * e);
+    text("Tienda", offsetX + 1800 * e, offsetY + 75 * e);
+    if (sobreTienda) cursor(HAND);
     popStyle();
   }
 
   int click() {
+    if (botonTiendaEncima()) return 9;    // 9 = pantalla Tienda
     int z = zonaEncima();
     if (z >= 0) return destinosModo[z];   // -1 si ese modo aun no existe
     return -1;
@@ -60,8 +86,14 @@ void imagenEnRect(PGraphics pg, PImage img, float x, float y, float w, float h) 
   float aspRect = w / h;
   float aspImg = (float) img.width / img.height;
   int sw, sh;
-  if (aspImg > aspRect) { sh = img.height; sw = round(img.height * aspRect); }   // sobra ancho
-  else                  { sw = img.width;  sh = round(img.width / aspRect); }    // sobra alto
+  if (aspImg > aspRect) {
+    sh = img.height;
+    sw = round(img.height * aspRect);
+  }   // sobra ancho
+  else {
+    sw = img.width;
+    sh = round(img.width / aspRect);
+  }    // sobra alto
   PImage recorte = img.get((img.width - sw) / 2, (img.height - sh) / 2, sw, sh);
   pg.imageMode(CORNER);
   pg.image(recorte, x, y, w, h);

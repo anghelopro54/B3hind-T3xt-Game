@@ -9,6 +9,8 @@ int actual = 0;          // posicion en la lista de la pantalla que se esta most
 final int SALIR = -2;    // destino especial: cerrar el programa
 EfectoTv tv;             // variable global para efecto de tv antiguo
 PFont fuente;
+inventario invent;
+Billetera billetera;      // puntos acumulados de todos los modos (para la tienda)
 
 int configVolverA = 0;     // si es > 0, el boton Volver de Configuracion regresa a esa pantalla (la pausa del Modo 1)
 
@@ -27,15 +29,17 @@ void settings() {
 
 void setup() {
   fuente = createFont("pixel.ttf", 48);
+  invent = new inventario();
+  billetera = new Billetera();
   fondo = loadImage("home.jpg");
 
 // Todas las pantallas se crean aqui, antes de usarlas (si no, error de null)
-  pantallas = new Pantalla[9];
+  pantallas = new Pantalla[10];
 
   // MENU: nombre, imagen, cantidad de botones
   pantallas[0] = new Pantalla("MENU", fondo, 4);
   // nombre, x, y, ancho, alto (pixeles de la imagen original) y a que pantalla lleva
-  pantallas[0].Ponerboton(0, new Boton("JUGAR",         1176,  768, 424, 100, fondo), 4);
+  pantallas[0].Ponerboton(0, new Boton("JUGAR",         1176,  768, 424, 100, fondo), 1);
   pantallas[0].Ponerboton(1, new Boton("CONFIGURACION", 1128,  888, 520,  96, fondo), 2);
   pantallas[0].Ponerboton(2, new Boton("CREDITOS",      1176, 1000, 424, 100, fondo), 3);
   pantallas[0].Ponerboton(3, new Boton("SALIR",         1176, 1116, 424,  96, fondo), SALIR);
@@ -65,6 +69,8 @@ void setup() {
     8
   );
   pantallas[8] = new Modo3();
+  
+  pantallas[9] = new tienda();
 
   tv = new EfectoTv();
 

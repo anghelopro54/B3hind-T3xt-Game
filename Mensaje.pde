@@ -40,15 +40,7 @@ class Mensaje {
 
     pushStyle();
     rectMode(CORNER);
-    fill(24, 28, 56, 240);
-    if (objetivo) {
-      stroke(255, 220, 120);
-      strokeWeight(3 * e);
-    } else {
-      stroke(120, 140, 200);
-      strokeWeight(2 * e);
-    }
-    rect(sx, sy, sw, sh, 6 * e);
+    marcoMensaje(sx, sy, sw, sh, invent.equipado[BORDE_M1], objetivo);
 
     noStroke();
     textFont(fuente);

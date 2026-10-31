@@ -21,15 +21,18 @@ class Caso {
   String[] retro = new String[3];       // por que funciona / por que no
 
   Caso(String titulo, String participantes, String texto,
-       String asertiva, String retroAsertiva,
-       String agresiva, String retroAgresiva,
-       String pasiva, String retroPasiva) {
+    String asertiva, String retroAsertiva,
+    String agresiva, String retroAgresiva,
+    String pasiva, String retroPasiva) {
     this.titulo = titulo;
     this.participantes = participantes;
     this.texto = texto;
-    opciones[0] = asertiva;   retro[0] = retroAsertiva;
-    opciones[1] = agresiva;   retro[1] = retroAgresiva;
-    opciones[2] = pasiva;     retro[2] = retroPasiva;
+    opciones[0] = asertiva;
+    retro[0] = retroAsertiva;
+    opciones[1] = agresiva;
+    retro[1] = retroAgresiva;
+    opciones[2] = pasiva;
+    retro[2] = retroPasiva;
   }
 }
 
@@ -77,6 +80,7 @@ class Modo3 extends Pantalla {
 
   int estado = JUGANDO;
   int puntos = 0;
+  boolean pagado = false;                   // true cuando ya se depositaron los puntos de esta partida
   int sacudidaHasta = 0;                    // el troll tiembla al fallar
   float[] brillo = new float[3];            // animacion al pasar el mouse por los botones
 
@@ -84,9 +88,11 @@ class Modo3 extends Pantalla {
   MenuPausa menuPausa = new MenuPausa();
   boolean pausado = false;
   boolean volviendoDeConfig = false;        // true mientras se esta en Configuracion abierta desde la pausa
+  int fondoAplicado = 0;                    // variante de fondo (tienda) que se esta mostrando
 
   Modo3() {
-    super("MODO 3", crearFondoModo3(), 0);
+    super("MODO 3", crearFondoModo3(invent.equipado[FONDO_M3]), 0);
+    fondoAplicado = invent.equipado[FONDO_M3];
     opX0 = (1920 - (3 * opW + 2 * opGap)) / 2;
 
     PImage t = cargarImagenAlguna(new String[] {"Alertatroll.png", "Alertatroll.jpg", "alertatroll.png", "alertatroll.jpg"});
@@ -98,6 +104,13 @@ class Modo3 extends Pantalla {
   }
 
   void reiniciar() {
+    // si compraste/equipaste otro fondo en la tienda, se cambia al entrar al modo
+    int f = invent.equipado[FONDO_M3];
+    if (f != fondoAplicado) {
+      ponerFondo(crearFondoModo3(f));
+      fondoAplicado = f;
+    }
+
     // al volver de Configuracion (abierta desde la pausa) se conserva la partida
     if (volviendoDeConfig) {
       volviendoDeConfig = false;
@@ -106,6 +119,7 @@ class Modo3 extends Pantalla {
     pausado = false;
     estado = JUGANDO;
     puntos = 0;
+    pagado = false;
     avatar.bienestar = BIENESTAR_INICIAL;
     avatar.limpiarReaccion();
     armarPartida();
@@ -202,6 +216,12 @@ class Modo3 extends Pantalla {
       fase = FASE_ELEGIR;
       elegida = -1;
     }
+
+    // depositar una sola vez cuando termina la partida
+    if (estado != JUGANDO && !pagado) {
+      billetera.ganar(puntos);
+      pagado = true;
+    }
   }
 
   // ---------- entrada ----------
@@ -278,23 +298,45 @@ class Modo3 extends Pantalla {
 
   // ---------- geometria auxiliar ----------
 
-  float pantX(float cx) { return offsetX + cx * escalaFondo; }    // canvas -> ventana
-  float pantY(float cy) { return offsetY + cy * escalaFondo; }
+  float pantX(float cx) {
+    return offsetX + cx * escalaFondo;
+  }    // canvas -> ventana
+  float pantY(float cy) {
+    return offsetY + cy * escalaFondo;
+  }
 
-  float opXi(int i) { return opX0 + i * (opW + opGap); }
+  float opXi(int i) {
+    return opX0 + i * (opW + opGap);
+  }
 
   float trollW() {
     if (alertaTroll == null) return 150;
     return trollH * alertaTroll.width / alertaTroll.height;
   }
-  float infoY() { return vy + barraH + 10; }                    // fila del cartel y los datos del caso
-  float infoX() { return vx + 16 + trollW() + 16; }
-  float infoW() { return vx + vw - 16 - infoX(); }
-  float papelX() { return vx + 16; }                            // "hoja" con el texto del conflicto
-  float papelW() { return vw - 32; }
-  float papelY() { return infoY() + trollH + 10; }
-  float franjaY() { return vy + vh - 14 - franjaH; }
-  float papelH() { return franjaY() - 8 - papelY(); }
+  float infoY() {
+    return vy + barraH + 10;
+  }                    // fila del cartel y los datos del caso
+  float infoX() {
+    return vx + 16 + trollW() + 16;
+  }
+  float infoW() {
+    return vx + vw - 16 - infoX();
+  }
+  float papelX() {
+    return vx + 16;
+  }                            // "hoja" con el texto del conflicto
+  float papelW() {
+    return vw - 32;
+  }
+  float papelY() {
+    return infoY() + trollH + 10;
+  }
+  float franjaY() {
+    return vy + vh - 14 - franjaH;
+  }
+  float papelH() {
+    return franjaY() - 8 - papelY();
+  }
 
   // Texto dentro de una caja dada en canvas (usa el textAlign / fill que haya puesto quien llama)
   void textoCaja(String s, float sz, float x, float y, float w, float h) {
@@ -464,6 +506,7 @@ class Modo3 extends Pantalla {
     for (int i = 0; i < 3; i++) {
       brillo[i] = lerp(brillo[i], (i == sobre) ? 1 : 0, 0.2);
       boolean pulsada = (fase == FASE_RESULTADO && i == elegida);
+      boolean normal = false;
 
       int relleno, borde, tinta;
       if (pulsada && acierto) {                       // la respuesta asertiva
@@ -479,6 +522,7 @@ class Modo3 extends Pantalla {
         borde = color(20, 20, 60);
         tinta = color(45, 50, 90);
       } else {
+        normal = true;
         relleno = lerpColor(color(150, 179, 230), color(200, 220, 255), brillo[i]);
         borde = color(20, 20, 60);
         tinta = color(20, 20, 60);
@@ -490,10 +534,7 @@ class Modo3 extends Pantalla {
       float cx = pantX(opXi(i) + opW / 2);
       float cy = pantY(opY + opH / 2);
 
-      fill(relleno);
-      stroke(borde);
-      strokeWeight(6 * e);
-      rect(cx - w / 2, cy - h / 2, w, h, 20 * e);
+      marcoOpcion(cx - w / 2, cy - h / 2, w, h, relleno, borde, invent.equipado[BORDE_M3], normal);
 
       // texto de la respuesta
       noStroke();
@@ -666,11 +707,19 @@ class Modo3 extends Pantalla {
 // ---------- utilidades (fuera de la clase, como crearFondoModo1 / imagenCover) ----------
 
 // Fondo del modo 3: fondo_modo3 a pantalla completa (usa imagenCover de PantallaJuego.pde)
-PGraphics crearFondoModo3() {
+PGraphics crearFondoModo3(int variante) {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
   pg.background(40, 30, 70);                      // por si falta la imagen
-  PImage img = cargarImagenAlguna(new String[] {"fondo_modo3.jpg", "fondo_modo3.png", "Fondo_modo3.jpg", "Fondo_modo3.png"});
+  // variante 0: fondo_modo3.jpg   variante 1: fondo_modo3_2.jpg   variante 2: fondo_modo3_3.jpg
+  String s = (variante == 0) ? "" : "_" + (variante + 1);
+  PImage img = cargarImagenAlguna(new String[] {"fondo_modo3" + s + ".jpg", "fondo_modo3" + s + ".png",
+                                                 "Fondo_modo3" + s + ".jpg", "Fondo_modo3" + s + ".png"});
+  if (img == null && variante > 0) {              // aun no hay imagen propia: la original con otro tinte
+    img = cargarImagenAlguna(new String[] {"fondo_modo3.jpg", "fondo_modo3.png", "Fondo_modo3.jpg", "Fondo_modo3.png"});
+    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}};
+    pg.tint(tintes[variante][0], tintes[variante][1], tintes[variante][2]);
+  }
   if (img != null) {
     imagenCover(pg, img);
   } else {
@@ -678,6 +727,7 @@ PGraphics crearFondoModo3() {
     pg.fill(0);
     pg.rect(625, 225, 682, 492, 30);              // monitor de respaldo
   }
+  pg.noTint();
   pg.endDraw();
   return pg;
 }
@@ -716,23 +766,47 @@ PImage quitarFondo(PImage img) {
   // semillas: todos los pixeles del borde que se parezcan al fondo
   for (int x = 0; x < w; x++) {
     int a = x, b = (h - 1) * w + x;
-    if (!visto[a] && parecidoA(px[a], br, bgr, bb)) { visto[a] = true; pila[n++] = a; }
-    if (!visto[b] && parecidoA(px[b], br, bgr, bb)) { visto[b] = true; pila[n++] = b; }
+    if (!visto[a] && parecidoA(px[a], br, bgr, bb)) {
+      visto[a] = true;
+      pila[n++] = a;
+    }
+    if (!visto[b] && parecidoA(px[b], br, bgr, bb)) {
+      visto[b] = true;
+      pila[n++] = b;
+    }
   }
   for (int y = 0; y < h; y++) {
     int a = y * w, b = y * w + w - 1;
-    if (!visto[a] && parecidoA(px[a], br, bgr, bb)) { visto[a] = true; pila[n++] = a; }
-    if (!visto[b] && parecidoA(px[b], br, bgr, bb)) { visto[b] = true; pila[n++] = b; }
+    if (!visto[a] && parecidoA(px[a], br, bgr, bb)) {
+      visto[a] = true;
+      pila[n++] = a;
+    }
+    if (!visto[b] && parecidoA(px[b], br, bgr, bb)) {
+      visto[b] = true;
+      pila[n++] = b;
+    }
   }
 
   // relleno por inundacion hacia adentro
   while (n > 0) {
     int i = pila[--n];
     int x = i % w, y = i / w;
-    if (x > 0     && !visto[i - 1] && parecidoA(px[i - 1], br, bgr, bb)) { visto[i - 1] = true; pila[n++] = i - 1; }
-    if (x < w - 1 && !visto[i + 1] && parecidoA(px[i + 1], br, bgr, bb)) { visto[i + 1] = true; pila[n++] = i + 1; }
-    if (y > 0     && !visto[i - w] && parecidoA(px[i - w], br, bgr, bb)) { visto[i - w] = true; pila[n++] = i - w; }
-    if (y < h - 1 && !visto[i + w] && parecidoA(px[i + w], br, bgr, bb)) { visto[i + w] = true; pila[n++] = i + w; }
+    if (x > 0     && !visto[i - 1] && parecidoA(px[i - 1], br, bgr, bb)) {
+      visto[i - 1] = true;
+      pila[n++] = i - 1;
+    }
+    if (x < w - 1 && !visto[i + 1] && parecidoA(px[i + 1], br, bgr, bb)) {
+      visto[i + 1] = true;
+      pila[n++] = i + 1;
+    }
+    if (y > 0     && !visto[i - w] && parecidoA(px[i - w], br, bgr, bb)) {
+      visto[i - w] = true;
+      pila[n++] = i - w;
+    }
+    if (y < h - 1 && !visto[i + w] && parecidoA(px[i + w], br, bgr, bb)) {
+      visto[i + w] = true;
+      pila[n++] = i + w;
+    }
   }
 
   PImage out = createImage(w, h, ARGB);
