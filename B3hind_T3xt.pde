@@ -73,7 +73,7 @@ void setup() {
     },
     5
   );
-  pantallas[7] = new PantallaInstrucciones("MODO 3: DE-ESCALATE!",
+  pantallas[7] = new PantallaInstrucciones("MODO 2: DE-ESCALATE!",
     new String[] {
       "Estalla un conflicto en Vínculo. Ivana debe calmarlo antes de que escale.",
       "[A] [B] [C]  Elige tu respuesta (o haz clic en ella).",

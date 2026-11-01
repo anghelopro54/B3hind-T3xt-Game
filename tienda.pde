@@ -1,6 +1,6 @@
 class tienda extends Pantalla {
   String[] categorias = {"MODO 1 · FONDO DE PC", "MODO 1 · BORDE DE MENSAJES",
-                         "MODO 3 · FONDO DE HABITACIÓN Y PC", "MODO 3 · BORDE DE OPCIONES"};
+                         "MODO 2 · FONDO DE HABITACIÓN Y PC", "MODO 2 · BORDE DE OPCIONES"};
   String[][] nombres = {{"Original", "Noche azul", "Rosa pastel", "Atardecer", "Matrix"},
                         {"Clásico", "Neón", "Dorado", "Rosa doble", "Fuego", "Hielo"},
                         {"Original", "Noche azul", "Rosa pastel", "Atardecer", "Matrix"},
