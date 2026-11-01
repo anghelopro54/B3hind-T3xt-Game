@@ -1,8 +1,8 @@
 final int FONDO_M1 = 0, BORDE_M1 = 1, FONDO_M3 = 2, BORDE_M3 = 3;
 
 class inventario {
-  int[] cantidad = {3, 4, 3, 3};
-  boolean[][] comprado = new boolean[4][4];
+  int[] cantidad = {5, 6, 5, 5};
+  boolean[][] comprado = new boolean[4][6];
   int[] equipado = new int[4];
 
   inventario() {

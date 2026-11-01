@@ -81,6 +81,7 @@ class Modo3 extends Pantalla {
   int estado = JUGANDO;
   int puntos = 0;
   boolean pagado = false;                   // true cuando ya se depositaron los puntos de esta partida
+  String moraleja = "";                     // mensaje final sobre sana convivencia
   int sacudidaHasta = 0;                    // el troll tiembla al fallar
   float[] brillo = new float[3];            // animacion al pasar el mouse por los botones
 
@@ -220,6 +221,7 @@ class Modo3 extends Pantalla {
     // depositar una sola vez cuando termina la partida
     if (estado != JUGANDO && !pagado) {
       billetera.ganar(puntos);
+      moraleja = elegirMoraleja(3, estado == VICTORIA);
       pagado = true;
     }
   }
@@ -609,14 +611,15 @@ class Modo3 extends Pantalla {
     textAlign(CENTER, CENTER);
     fill(gano ? color(90, 220, 120) : color(240, 70, 70));
     textSize(64 * e);
-    text(gano ? "¡CONFLICTOS RESUELTOS!" : "LA SITUACIÓN SE DESCONTROLÓ", pantX(960), pantY(440));
+    text(gano ? "¡CONFLICTOS RESUELTOS!" : "LA SITUACIÓN SE DESCONTROLÓ", pantX(960), pantY(300));
     fill(255);
     textSize(28 * e);
-    if (gano) text("Ivana calmó la red.   Puntos: " + puntos + "   Bienestar: " + (int) avatar.bienestar, pantX(960), pantY(520));
-    else      text("Puntos: " + puntos + "   Casos resueltos: " + casoActual + " / " + partida.size(), pantX(960), pantY(520));
+    if (gano) text("Ivana calmó la red.   Puntos: " + puntos + "   Bienestar: " + (int) avatar.bienestar, pantX(960), pantY(370));
+    else      text("Puntos: " + puntos + "   Casos resueltos: " + casoActual + " / " + partida.size(), pantX(960), pantY(370));
     textSize(24 * e);
-    if (gano) text("Clic: elegir otro modo   ·   ENTER: jugar de nuevo   ·   ESC: menú principal", pantX(960), pantY(590));
-    else      text("Clic o ENTER para reintentar   ·   ESC para volver al menú", pantX(960), pantY(590));
+    if (gano) text("Clic: elegir otro modo   ·   ENTER: jugar de nuevo   ·   ESC: menú principal", pantX(960), pantY(700));
+    else      text("Clic o ENTER para reintentar   ·   ESC para volver al menú", pantX(960), pantY(700));
+    dibujarMoraleja(moraleja, gano);
     popStyle();
   }
 
@@ -717,7 +720,7 @@ PGraphics crearFondoModo3(int variante) {
                                                  "Fondo_modo3" + s + ".jpg", "Fondo_modo3" + s + ".png"});
   if (img == null && variante > 0) {              // aun no hay imagen propia: la original con otro tinte
     img = cargarImagenAlguna(new String[] {"fondo_modo3.jpg", "fondo_modo3.png", "Fondo_modo3.jpg", "Fondo_modo3.png"});
-    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}};
+    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}, {255, 190, 120}, {150, 255, 170}};
     pg.tint(tintes[variante][0], tintes[variante][1], tintes[variante][2]);
   }
   if (img != null) {

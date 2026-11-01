@@ -1,14 +1,17 @@
 class tienda extends Pantalla {
   String[] categorias = {"MODO 1 · FONDO DE PC", "MODO 1 · BORDE DE MENSAJES",
                          "MODO 3 · FONDO DE HABITACIÓN Y PC", "MODO 3 · BORDE DE OPCIONES"};
-  String[][] nombres = {{"Original", "Noche azul", "Rosa pastel"},
-                        {"Clásico", "Neón", "Dorado", "Rosa doble"},
-                        {"Original", "Noche azul", "Rosa pastel"},
-                        {"Clásico", "Neón cian", "Dorado doble"}};
-  int[][] precios = {{0, 200, 300}, {0, 100, 150, 200}, {0, 200, 300}, {0, 100, 150}};
+  String[][] nombres = {{"Original", "Noche azul", "Rosa pastel", "Atardecer", "Matrix"},
+                        {"Clásico", "Neón", "Dorado", "Rosa doble", "Fuego", "Hielo"},
+                        {"Original", "Noche azul", "Rosa pastel", "Atardecer", "Matrix"},
+                        {"Clásico", "Neón cian", "Dorado doble", "Rosa neón", "Verde pixel"}};
+  int[][] precios = {{0, 200, 250, 300, 350},
+                     {0, 100, 150, 150, 200, 200},
+                     {0, 200, 250, 300, 350},
+                     {0, 100, 150, 150, 200}};
 
-  float cardW = 230, cardH = 110, gap = 20, x0 = 470;      // canvas 1920x1080
-  PImage[][] miniaturas = new PImage[4][4];
+  float cardW = 158, cardH = 110, gap = 10, x0 = 461;      // canvas 1920x1080 (caben hasta 6 tarjetas por fila)
+  PImage[][] miniaturas = new PImage[4][6];
   boolean miniaturasListas = false;
   String aviso = "";
   int avisoHasta = 0;
@@ -23,7 +26,7 @@ class tienda extends Pantalla {
 
   void reiniciar() {
     if (!miniaturasListas) {                 // se arman una sola vez (cargar imágenes grandes tarda)
-      for (int v = 0; v < 3; v++) {
+      for (int v = 0; v < 5; v++) {
         miniaturas[0][v] = crearFondoModo1(v).get();  miniaturas[0][v].resize(160, 90);
         miniaturas[2][v] = crearFondoModo3(v).get();  miniaturas[2][v].resize(160, 90);
       }
@@ -97,15 +100,15 @@ class tienda extends Pantalla {
     noStroke();
     textAlign(CENTER, CENTER);
     fill(20, 20, 60);
-    textSize(17 * e);
+    textSize(15 * e);
     text(nombres[s][v], x + w / 2, y + 72 * e);
 
     String estado;
     if (equipada)                                  { estado = "EQUIPADO"; fill(20, 130, 60); }
     else if (tengo)                                { estado = "EQUIPAR"; fill(20, 20, 60); }
     else if (billetera.puedePagar(precios[s][v]))  { estado = "COMPRAR  " + precios[s][v]; fill(20, 20, 60); }
-    else                                           { estado = precios[s][v] + "  faltan " + (precios[s][v] - billetera.saldo); fill(190, 30, 40); }
-    textSize(18 * e);
+    else                                           { estado = "faltan " + (precios[s][v] - billetera.saldo); fill(190, 30, 40); }
+    textSize(16 * e);
     text(estado, x + w / 2, y + 94 * e);
   }
 

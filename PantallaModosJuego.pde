@@ -27,9 +27,35 @@ class PantallaModosJuego extends Pantalla {
     return -1;
   }
 
+    // Botones de la pantalla (canvas 1920x1080): {x, y, ancho, alto}
+  float[] btnVolver = {1700, 43, 200, 65};     // arriba a la derecha -> menu principal
+  float[] btnTienda = {1700, 972, 200, 65};    // abajo a la derecha  -> tienda
+
+  boolean encimaDe(float[] b) {
+    float e = escalaFondo;
+    return mouseX >= offsetX + b[0] * e && mouseX <= offsetX + (b[0] + b[2]) * e
+        && mouseY >= offsetY + b[1] * e && mouseY <= offsetY + (b[1] + b[3]) * e;
+  }
+
+  void dibujarBoton(String texto, float[] b, boolean sobre) {
+    float e = escalaFondo;
+    fill(sobre ? color(200, 220, 255) : color(150, 179, 230));
+    stroke(20, 20, 60);
+    strokeWeight(6 * e);
+    rect(offsetX + b[0] * e, offsetY + b[1] * e, b[2] * e, b[3] * e, 20 * e);
+    fill(20, 20, 60);
+    noStroke();
+    textFont(fuente);
+    textAlign(CENTER, CENTER);
+    textSize(34 * e);
+    text(texto, offsetX + (b[0] + b[2] / 2) * e, offsetY + (b[1] + b[3] / 2) * e);
+  }
+
   void draw() {
     int z = zonaEncima();
-    cursor(z >= 0 ? HAND : ARROW);
+    boolean sobreVolver = encimaDe(btnVolver);
+    boolean sobreTienda = encimaDe(btnTienda);
+    cursor((z >= 0 || sobreVolver || sobreTienda) ? HAND : ARROW);
 
     pushStyle();
     rectMode(CORNER);
@@ -42,12 +68,17 @@ class PantallaModosJuego extends Pantalla {
       rect(offsetX + zonas[i][0] * escalaFondo, offsetY + zonas[i][1] * escalaFondo,
            zonas[i][2] * escalaFondo, zonas[i][3] * escalaFondo, 6);
     }
+
+    dibujarBoton("Volver", btnVolver, sobreVolver);
+    dibujarBoton("Tienda", btnTienda, sobreTienda);
     popStyle();
   }
 
   int click() {
+    if (encimaDe(btnVolver)) return 0;    // 0 = menu principal
+    if (encimaDe(btnTienda)) return 9;    // 9 = tienda
     int z = zonaEncima();
-    if (z >= 0) return destinosModo[z];   // -1 si ese modo aun no existe
+    if (z >= 0) return destinosModo[z];
     return -1;
   }
 }

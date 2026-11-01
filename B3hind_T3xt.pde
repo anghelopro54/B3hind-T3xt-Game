@@ -1,14 +1,20 @@
 // B3hind T3xt - Menu principal
+import processing.video.*;   // intro en video (libreria Video de Processing)
+import processing.sound.*;   // musica de fondo (libreria Sound de Processing)
+
 // Los botones se definen en coordenadas de la IMAGEN ORIGINAL (2356 x 1316),
 // asi funcionan en cualquier resolucion de pantalla.
 
 PImage fondo;
 Pantalla[] pantallas;    // 0 = MENU, 1 = JUEGO, 2 = CONFIGURACION, 3 = CREDITOS, 4 = MODOS, 5 = MODO 1,
-                         // 6 = INSTRUCCIONES MODO 1, 7 = INSTRUCCIONES MODO 3, 8 = MODO 3 (DE-ESCALATE!)
-int actual = 0;          // posicion en la lista de la pantalla que se esta mostrando
+                         // 6 = INSTRUCCIONES MODO 1, 7 = INSTRUCCIONES MODO 3, 8 = MODO 3 (DE-ESCALATE!), 9 = TIENDA, 10 = INTRO
+int actual = 0;          // (setup lo pone en 10 = intro; luego pasa al menu)  posicion en la lista de la pantalla que se esta mostrando
 final int SALIR = -2;    // destino especial: cerrar el programa
 EfectoTv tv;             // variable global para efecto de tv antiguo
 PFont fuente;
+Movie introVideo;        // intro del estudio
+Musica musica;           // musica de fondo (ver Musica.pde: ahi se asigna la cancion de cada pantalla)
+int pantallaMusica = -1; // ultima pantalla para la que se decidio la musica
 inventario invent;
 Billetera billetera;      // puntos acumulados de todos los modos (para la tienda)
 
@@ -30,11 +36,19 @@ void settings() {
 void setup() {
   fuente = createFont("pixel.ttf", 48);
   invent = new inventario();
+  musica = new Musica(this);
   billetera = new Billetera();
+  billetera.reiniciar();      // los puntos empiezan siempre en 0 (por si el juego anterior se cerro con el boton Stop)
+  // al cerrar el programa de cualquier forma (X, Stop, SALIR) se escribe 0 en data/billetera.txt
+  Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+    public void run() {
+      if (billetera != null) billetera.reiniciar();
+    }
+  }));
   fondo = loadImage("home.jpg");
 
 // Todas las pantallas se crean aqui, antes de usarlas (si no, error de null)
-  pantallas = new Pantalla[10];
+  pantallas = new Pantalla[11];
 
   // MENU: nombre, imagen, cantidad de botones
   pantallas[0] = new Pantalla("MENU", fondo, 4);
@@ -71,14 +85,25 @@ void setup() {
   pantallas[8] = new Modo3();
   
   pantallas[9] = new tienda();
+  pantallas[10] = new PantallaIntro();
 
   tv = new EfectoTv();
 
+  // La intro del estudio se reproduce siempre antes del menu
+  if (new File(dataPath(ARCHIVO_INTRO)).exists()) introVideo = new Movie(this, ARCHIVO_INTRO);
+  actual = 10;
   calcularLayout();
+  pantallas[10].reiniciar();
 }
 
 void draw() {
   background(0);
+
+  // si cambio la pantalla, la musica decide si cambia de cancion
+  if (actual != pantallaMusica) {
+    pantallaMusica = actual;
+    musica.alCambiarPantalla(actual);
+  }
   calcularLayout();
 
   // Fondo (sin deformar, centrado)
@@ -124,8 +149,24 @@ void calcularLayout() {
   offsetY = (height - f.height * escalaFondo) / 2;
 }
 
+// Al cerrar el juego los puntos vuelven a 0: se escribe 0 en data/billetera.txt
+void exit() {
+  if (billetera != null) billetera.reiniciar();
+  super.exit();
+}
+
+// Sonido del boton que se acaba de pulsar: cada ventana de modo tiene el suyo, el resto usa el del menu
+void sonarBoton(int desde, int destino) {
+  if (desde == 1 || desde == 10) return;               // cinematica e intro: sin sonido
+  if (desde == 4 && destino == 6) musica.efecto("botonmodo1.mp3");
+  else if (desde == 4 && destino == 7) musica.efecto("botonmodo3.mp3");
+  else musica.efecto("botonmenu.mp3");
+}
+
 void mousePressed() {
+  int desde = actual;
   int destino = pantallas[actual].click();   // -1 si no se hizo click en ningun boton
+  if (destino == SALIR || destino >= 0) sonarBoton(desde, destino);
   if (destino == SALIR) {
     exit();
   } else if (destino >= 0) {

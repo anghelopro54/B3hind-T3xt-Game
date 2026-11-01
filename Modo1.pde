@@ -22,7 +22,8 @@ class Modo1 extends Pantalla {
   ArrayList<String> bolsaToxicos = new ArrayList<String>();
   ArrayList<String> bolsaSanos = new ArrayList<String>();
 
-  final int META_PUNTOS = 200;          // puntos para ganar
+  final int META_PUNTOS = 400;          // puntos para ganar
+  final int PUNTOS_REPORTE = 30;        // puntos extra al reportar (cambia aqui el valor)
   final int BLOQUEOS_PARA_REPORTE = 4;  // bloqueos necesarios para poder reportar
 
   Avatar avatar;
@@ -31,6 +32,7 @@ class Modo1 extends Pantalla {
   int puntos = 0;
   int fondoAplicado = 0;
   boolean pagado = false;               // true cuando ya se depositaron los puntos de esta partida
+  String moraleja = "";                 // mensaje final sobre sana convivencia
   int bloqueados = 0;
   int ultimoMs = 0;
   int proximoSpawn = 0;
@@ -171,6 +173,7 @@ class Modo1 extends Pantalla {
     // depositar una sola vez cuando termina la partida
     if (estado != JUGANDO && !pagado) {
       billetera.ganar(puntos);
+      moraleja = elegirMoraleja(1, estado == VICTORIA);
       pagado = true;
     }
   }
@@ -194,7 +197,7 @@ class Modo1 extends Pantalla {
     int tipo = elegirTipo();
     String texto = sacarTexto(tipo);
     String usuario = usuarios[int(random(usuarios.length))];
-    float vel = 70 + puntos * 0.2 + random(-6, 6);
+    float vel = 90 + puntos * 0.2 + random(1, 4);
     mensajes.add(new Mensaje(tipo, usuario, texto, carriles[elegido], campoY - msgH, msgW, msgH, vel));
   }
 
@@ -264,7 +267,8 @@ class Modo1 extends Pantalla {
     if (bloqueados >= BLOQUEOS_PARA_REPORTE) {
       bloqueados = 0;
       avatar.cambiarBienestar(20);
-      avisar("Reporte enviado  +20 bienestar");
+      puntos += PUNTOS_REPORTE;
+      avisar("Reporte enviado  +20 bienestar  +" + PUNTOS_REPORTE + " puntos");
     } else {
       avisar("Aún no tienes " + BLOQUEOS_PARA_REPORTE + " bloqueos para reportar");
     }
@@ -330,7 +334,7 @@ class Modo1 extends Pantalla {
       }
       return -1;
     }
-    if (estado != JUGANDO) reiniciar();
+    if (estado != JUGANDO) return 4;           // fin de partida: un clic vuelve a la eleccion de modos
     return -1;
   }
 
@@ -345,6 +349,7 @@ class Modo1 extends Pantalla {
 
     dibujarMensajes();
     dibujarHud();
+    dibujarAvisoReporte();
     avatar.dibujar();
     if (estado != JUGANDO) dibujarFin();
     if (pausado) menuPausa.dibujar();
@@ -423,6 +428,33 @@ class Modo1 extends Pantalla {
     popStyle();
   }
 
+  // Cartel grande "REPORTAR" cuando ya hay bloqueos suficientes, para que se entienda que toca pulsar [R]
+  void dibujarAvisoReporte() {
+    if (estado != JUGANDO || bloqueados < BLOQUEOS_PARA_REPORTE) return;
+    float e = escalaFondo;
+    float pulso = 1 + 0.06 * sin(millis() * 0.012);
+    pushStyle();
+    pushMatrix();
+    translate(offsetX + 971 * e, offsetY + 85 * e);     // arriba de la ventana de mensajes
+    scale(pulso);
+    rectMode(CENTER);
+    fill(20, 20, 60, 235);
+    stroke((millis() / 300) % 2 == 0 ? color(255, 220, 120) : color(255, 90, 90));
+    strokeWeight(6 * e);
+    rect(0, 0, 820 * e, 120 * e, 20 * e);
+    noStroke();
+    textFont(fuente);
+    textAlign(CENTER, CENTER);
+    fill(255, 220, 120);
+    textSize(76 * e);
+    text("¡REPORTAR!", 0, -14 * e);
+    fill(255);
+    textSize(26 * e);
+    text("Pulsa  [R]", 0, 38 * e);
+    popMatrix();
+    popStyle();
+  }
+
   void dibujarFin() {
     float e = escalaFondo;
     pushStyle();
@@ -434,12 +466,13 @@ class Modo1 extends Pantalla {
     textAlign(CENTER, CENTER);
     fill(estado == VICTORIA ? color(90, 220, 120) : color(240, 70, 70));
     textSize(64 * e);
-    text(estado == VICTORIA ? "¡TURNO COMPLETADO!" : "IVANA NO AGUANTA MÁS", offsetX + 960 * e, offsetY + 460 * e);
+    text(estado == VICTORIA ? "¡TURNO COMPLETADO!" : "IVANA NO AGUANTA MÁS", offsetX + 960 * e, offsetY + 300 * e);
     fill(255);
     textSize(28 * e);
-    text("Puntos: " + puntos, offsetX + 960 * e, offsetY + 540 * e);
-    text("Clic o ENTER para reintentar   ·   ESC para volver al menú", offsetX + 960 * e, offsetY + 600 * e);
+    text("Puntos: " + puntos, offsetX + 960 * e, offsetY + 370 * e);
+    text("Clic para elegir otro modo   ·   ENTER para reintentar   ·   ESC para volver al menú", offsetX + 960 * e, offsetY + 700 * e);
     popStyle();
+    dibujarMoraleja(moraleja, estado == VICTORIA);
   }
 }
 
@@ -452,8 +485,9 @@ PGraphics crearFondoModo1(int variante) {
   PImage img = cargarImagenAlguna(new String[] {"PrimerModo" + sufijo + ".jpg", "PrimerModo" + sufijo + ".png"});
   if (img == null) {                                                    // si aún no tienes la imagen: la original con otro tinte
     img = loadImage("PrimerModo.jpg");
-    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}};
-    pg.tint(tintes[variante][0], tintes[variante][1], tintes[variante][2]);
+    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}, {255, 190, 120}, {150, 255, 170}};
+    int vt = variante % tintes.length;
+    pg.tint(tintes[vt][0], tintes[vt][1], tintes[vt][2]);
   }
   if (img != null) imagenCover(pg, img);
   pg.noTint();

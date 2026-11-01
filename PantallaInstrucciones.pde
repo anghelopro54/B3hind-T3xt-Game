@@ -1,7 +1,8 @@
 class PantallaInstrucciones extends Pantalla {
   PantallaInstrucciones(String titulo, String[] parrafos, int destinoJugar) {
-    super("INSTRUCCIONES", crearFondoInstrucciones(titulo, parrafos), 1);
+    super("INSTRUCCIONES", crearFondoInstrucciones(titulo, parrafos), 2);
     Ponerboton(0, new Boton("Jugar", 830, 815, 260, 70, fondo), destinoJugar);
+    Ponerboton(1, new Boton("Volver", 1700, 43, 200, 65, fondo), 4);   // 4 = eleccion de modos
   }
 }
 
@@ -56,6 +57,16 @@ PGraphics crearFondoInstrucciones(String titulo, String[] parrafos) {
   pg.textAlign(CENTER, CENTER);
   pg.textSize(37);
   pg.text("Jugar", 960, 850);
+
+  // boton Volver (arriba a la derecha, igual que en Configuracion y Creditos) -> eleccion de modos
+  pg.fill(150, 179, 230);
+  pg.stroke(20, 20, 60);
+  pg.strokeWeight(6);
+  pg.rect(1700, 43, 200, 65, 20);
+  pg.fill(20, 20, 60);
+  pg.textAlign(CENTER, CENTER);
+  pg.textSize(37);
+  pg.text("Volver", 1801, 75);
 
   pg.endDraw();
   return pg;

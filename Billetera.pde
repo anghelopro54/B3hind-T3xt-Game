@@ -12,6 +12,13 @@ class Billetera {
     guardar();
   }
 
+  // Pone los puntos en 0 y lo escribe en data/billetera.txt (se llama al cerrar el juego)
+  void reiniciar() {
+    saldo = 999999;
+    totalGanado = 0;
+    guardar();
+  }
+
   boolean puedePagar(int precio) { return saldo >= precio; }
 
   // devuelve true si la compra se pudo hacer
