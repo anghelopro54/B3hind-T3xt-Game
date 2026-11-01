@@ -54,8 +54,8 @@ class Modo3 extends Pantalla {
   final float BIENESTAR_INICIAL = 80;
   final float BIENESTAR_ACIERTO = 10;           // respuesta asertiva: suma bienestar
   final float BIENESTAR_ERROR = 15;             // respuesta agresiva o pasiva: resta bienestar
-  final int PUNTOS_ACIERTO = 20;                // acertar a la primera
-  final int PUNTOS_ACIERTO_CON_ERRORES = 10;    // acertar despues de fallar
+  final int PUNTOS_ACIERTO = 60;                // acertar a la primera
+  final int PUNTOS_ACIERTO_CON_ERRORES = 30;    // acertar despues de fallar
   final int PANTALLA_MODOS = 4;                 // pantallas[4] = seleccion de modos (al ganar se vuelve ahi)
 
   Avatar avatar;

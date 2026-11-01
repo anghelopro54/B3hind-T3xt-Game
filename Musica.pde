@@ -10,7 +10,7 @@ class Musica {
   SoundFile sonando = null;
   String nombreSonando = "";
   final float MAX_EFECTOS = 0.4;           // tope de volumen de los botones (barra de Configuracion al 100%)
-  final float MAX_MUSICA = 0.32;           // tope de volumen de la musica (barra de Configuracion al 100%)
+  final float MAX_MUSICA = 0.7;           // tope de volumen de la musica (barra de Configuracion al 100%)
   float volumenEfectos = MAX_EFECTOS;      // volumen actual de los sonidos de los botones
   float volumen = MAX_MUSICA;              // volumen actual de la musica
 

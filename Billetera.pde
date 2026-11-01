@@ -14,7 +14,7 @@ class Billetera {
 
   // Pone los puntos en 0 y lo escribe en data/billetera.txt (se llama al cerrar el juego)
   void reiniciar() {
-    saldo = 999999;
+    saldo = 0;
     totalGanado = 0;
     guardar();
   }
