@@ -1,6 +1,8 @@
+// =====================================================================================
 // Avatar de Ivana: se muestra abajo a la izquierda en un recuadro pequeno.
-// La cara cambia segun el nivel de bienestar (0 a 100).
-final int FELIZ = 0;
+// La cara cambia segun el nivel de bienestar (0 a 100): feliz, confundida o frustrada.
+// =====================================================================================
+final int FELIZ = 0;         // las 3 caras posibles (tambien son indices de imagenes[])
 final int CONFUNDIDA = 1;
 final int FRUSTRADA = 2;
 
@@ -17,7 +19,7 @@ class Avatar {
   // (el Modo 3 la usa al acertar / fallar). -1 = sin reaccion, manda el bienestar.
   int reaccion = -1;
 
-  PImage[] imagenes = new PImage[3];
+  PImage[] imagenes = new PImage[3];        // feliz.jpg, confundida.jpg, frustrada.jpg
   String[] nombres = {"FELIZ", "CONFUNDIDA", "FRUSTRADA"};
 
   Avatar(float x, float y, float tam, float bienestarInicial) {
@@ -50,20 +52,22 @@ class Avatar {
     return (reaccion >= 0) ? reaccion : estado();
   }
 
-  void reaccionar(int cara) { reaccion = cara; }
-  void limpiarReaccion() { reaccion = -1; }
+  void reaccionar(int cara) { reaccion = cara; }      // fuerza una cara un momento (Modo 3)
+  void limpiarReaccion() { reaccion = -1; }           // vuelve a depender del bienestar
 
   // Color segun el bienestar (barras del HUD)
   color colorEstado() {
     return colorDe(estado());
   }
 
+  // Color de cada estado: verde = feliz, amarillo = confundida, rojo = frustrada
   color colorDe(int e) {
     if (e == FELIZ) return color(90, 220, 120);
     if (e == CONFUNDIDA) return color(255, 200, 80);
     return color(240, 70, 70);
   }
 
+  // Dibuja el recuadro: borde de color, la cara y la etiqueta con su nombre
   void dibujar() {
     float sx = offsetX + x * escalaFondo;
     float sy = offsetY + y * escalaFondo;

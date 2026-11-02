@@ -8,7 +8,7 @@ class PantallaModosJuego extends Pantalla {
   };
 
   // A que pantalla lleva cada modo (indice en pantallas[]). -1 = todavia no hace nada.
-  int[] destinosModo = {6, 7};      // 6 = instrucciones Modo 1, 7 = instrucciones Modo 3
+  int[] destinosModo = {P_INSTR_M1, P_INSTR_M3};      // instrucciones de cada modo
 
   PantallaModosJuego() {
     super("MODOS", crearFondoModos(), 0);   // 0 botones: usamos las zonas de arriba
@@ -27,16 +27,18 @@ class PantallaModosJuego extends Pantalla {
     return -1;
   }
 
-    // Botones de la pantalla (canvas 1920x1080): {x, y, ancho, alto}
+  // Botones de la pantalla (canvas 1920x1080): {x, y, ancho, alto}
   float[] btnVolver = {1700, 43, 200, 65};     // arriba a la derecha -> menu principal
   float[] btnTienda = {1700, 972, 200, 65};    // abajo a la derecha  -> tienda
 
+  // true si el mouse esta sobre el rectangulo b = {x, y, ancho, alto}
   boolean encimaDe(float[] b) {
     float e = escalaFondo;
     return mouseX >= offsetX + b[0] * e && mouseX <= offsetX + (b[0] + b[2]) * e
         && mouseY >= offsetY + b[1] * e && mouseY <= offsetY + (b[1] + b[3]) * e;
   }
 
+  // Boton redondeado que se dibuja cada cuadro (cambia de color al pasar el mouse)
   void dibujarBoton(String texto, float[] b, boolean sobre) {
     float e = escalaFondo;
     fill(sobre ? color(200, 220, 255) : color(150, 179, 230));
@@ -51,6 +53,7 @@ class PantallaModosJuego extends Pantalla {
     text(texto, offsetX + (b[0] + b[2] / 2) * e, offsetY + (b[1] + b[3] / 2) * e);
   }
 
+  // Resalta la zona bajo el mouse y dibuja los botones Volver y Tienda
   void draw() {
     int z = zonaEncima();
     boolean sobreVolver = encimaDe(btnVolver);
@@ -74,26 +77,14 @@ class PantallaModosJuego extends Pantalla {
     popStyle();
   }
 
+  // Clic: Volver, Tienda o uno de los dos modos
   int click() {
-    if (encimaDe(btnVolver)) return 0;    // 0 = menu principal
-    if (encimaDe(btnTienda)) return 9;    // 9 = tienda
+    if (encimaDe(btnVolver)) return P_MENU;
+    if (encimaDe(btnTienda)) return P_TIENDA;
     int z = zonaEncima();
     if (z >= 0) return destinosModo[z];
     return -1;
   }
-}
-
-// Dibuja una imagen llenando un rectangulo (x, y, w, h) del PGraphics sin deformarla:
-// recorta el sobrante centrado (como imagenCover, pero para una zona).
-void imagenEnRect(PGraphics pg, PImage img, float x, float y, float w, float h) {
-  float aspRect = w / h;
-  float aspImg = (float) img.width / img.height;
-  int sw, sh;
-  if (aspImg > aspRect) { sh = img.height; sw = round(img.height * aspRect); }   // sobra ancho
-  else                  { sw = img.width;  sh = round(img.width / aspRect); }    // sobra alto
-  PImage recorte = img.get((img.width - sw) / 2, (img.height - sh) / 2, sw, sh);
-  pg.imageMode(CORNER);
-  pg.image(recorte, x, y, w, h);
 }
 
 // Fondo: Modo de juego.jpg + portadas de los dos modos + titulos

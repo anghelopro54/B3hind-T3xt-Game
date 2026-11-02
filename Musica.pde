@@ -1,7 +1,10 @@
-// Musica de fondo del juego (libreria "Sound" de Processing: Sketch > Importar biblioteca > Administrar bibliotecas > "Sound").
+// =====================================================================================
+// Musica de fondo y efectos de sonido (libreria "Sound": Sketch > Importar biblioteca > Administrar bibliotecas > "Sound").
+// Hay una sola instancia global: musica. Los archivos de audio estan en la carpeta data.
 // Cada vez que cambia la pantalla, main llama a alCambiarPantalla(). Si la pantalla tiene una cancion asignada
 // en archivoPara(), se reproduce en bucle; si es la misma que ya suena, no se reinicia. Si la pantalla devuelve null,
 // la musica que suena se queda como esta.
+// =====================================================================================
 class Musica {
   PApplet app;
   String[] nombres = new String[12];       // canciones ya cargadas (para no cargarlas dos veces)
@@ -39,12 +42,14 @@ class Musica {
     }
   }
 
+  // Main lo llama cada vez que cambia la pantalla activa
   void alCambiarPantalla(int pantalla) {
     String nombre = archivoPara(pantalla);
     if (nombre == null || nombre.equals(nombreSonando)) return;
     reproducir(nombre);
   }
 
+  // Cambia la cancion de fondo (en bucle)
   void reproducir(String nombre) {
     SoundFile nuevo = cargar(nombre);
     if (nuevo == null) return;               // el archivo no existe: se queda como esta
@@ -63,6 +68,7 @@ class Musica {
     f.amp(volumenEfectos);                   // despues de play(): play() deja el volumen en 1.0
   }
 
+  // Devuelve el SoundFile del archivo, cargandolo solo la primera vez (null si el archivo no existe)
   SoundFile cargar(String nombre) {
     for (int i = 0; i < cargadas; i++) if (nombres[i].equals(nombre)) return archivos[i];
     if (!new File(dataPath(nombre)).exists()) {
@@ -76,6 +82,7 @@ class Musica {
     return archivos[cargadas - 1];
   }
 
+  // Para la musica de fondo
   void detener() {
     if (sonando != null) sonando.stop();
     sonando = null;

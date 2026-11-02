@@ -1,3 +1,9 @@
+// =====================================================================================
+// Tienda: se compran fondos y bordes con los puntos de la billetera. Cada categoria (fila) tiene varias
+// tarjetas; clic en una = comprar (si alcanza el saldo) o equipar (si ya la tienes).
+// Los datos de cada tarjeta (nombres y precios) estan en las tablas de abajo: para agregar una opcion
+// nueva, anade su nombre y precio, sube inventario.cantidad[] y dibuja su estilo en estilos.pde.
+// =====================================================================================
 class tienda extends Pantalla {
   String[] categorias = {"MODO 1 · FONDO DE PC", "MODO 1 · BORDE DE MENSAJES",
                          "MODO 2 · FONDO DE HABITACIÓN Y PC", "MODO 2 · BORDE DE OPCIONES"};
@@ -18,12 +24,14 @@ class tienda extends Pantalla {
 
   tienda() {
     super("TIENDA", crearFondoTienda(), 1);
-    Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondo), 4);   // 4 = pantalla de modos
+    Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondo), P_MODOS);
   }
 
+  // Posicion de la tarjeta: columna v (opcion) y fila s (categoria), en el lienzo 1920x1080
   float cardX(int v) { return x0 + v * (cardW + gap); }
   float cardY(int s) { return 270 + s * 155; }
 
+  // Al entrar: arma las miniaturas de los fondos (solo la primera vez)
   void reiniciar() {
     if (!miniaturasListas) {                 // se arman una sola vez (cargar imágenes grandes tarda)
       for (int v = 0; v < 5; v++) {
@@ -46,6 +54,7 @@ class tienda extends Pantalla {
     return -1;
   }
 
+  // Dibuja saldo, titulos de categoria, tarjetas y el aviso temporal
   void draw() {
     super.draw();                                           // botón Volver
     float e = escalaFondo;
@@ -76,6 +85,7 @@ class tienda extends Pantalla {
     popStyle();
   }
 
+  // Una tarjeta: vista previa, nombre y estado (EQUIPADO / EQUIPAR / COMPRAR precio / faltan N)
   void dibujarTarjeta(int s, int v, boolean sobre) {
     float e = escalaFondo;
     float x = offsetX + cardX(v) * e, y = offsetY + cardY(s) * e, w = cardW * e, h = cardH * e;
@@ -112,6 +122,7 @@ class tienda extends Pantalla {
     text(estado, x + w / 2, y + 94 * e);
   }
 
+  // Clic: Volver, o comprar / equipar la tarjeta bajo el mouse
   int click() {
     int d = super.click();                         // ¿Volver?
     if (d >= 0) return d;
@@ -137,6 +148,7 @@ class tienda extends Pantalla {
   void avisar(String t) { aviso = t; avisoHasta = millis() + 2000; }
 }
 
+// Fondo de la tienda: la misma ventana XP de Creditos
 PGraphics crearFondoTienda() {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
@@ -145,4 +157,4 @@ PGraphics crearFondoTienda() {
   ventanaxp(pg, "Tienda.exe", 440, true, img);      // misma ventana que Créditos; dibuja también el botón "Volver"
   pg.endDraw();
   return pg;
-}
+}

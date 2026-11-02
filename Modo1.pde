@@ -1,11 +1,10 @@
+// =====================================================================================
 // MODO 1: FLAGGED & FILTERED
-// Clase del juego/sistema: estado, puntaje, bienestar y generacion de mensajes.
-// Hereda de Pantalla, asi encaja con el resto del menu (pantallas[5]).
-final int JUGANDO = 0;
-final int VICTORIA = 1;
-final int DERROTA = 2;
-
-class Modo1 extends Pantalla {
+// Caen mensajes de usuarios por la pantalla del monitor. El jugador debe BLOQUEAR (tecla B) los toxicos
+// y APROBAR (tecla A) los sanos antes de que lleguen al final. Cada 4 bloqueos puede REPORTAR (tecla R).
+// Hereda de ModoJuego (pausa, puntos, avatar, estado) y esta en pantallas[P_MODO1].
+// =====================================================================================
+class Modo1 extends ModoJuego {
   // Zona blanca de la ventana "Clasificacion" en PrimerModo.jpg (canvas 1920x1080).
   // Si quieres moverla, ajusta estos valores y mira el resultado con la tecla D.
   float campoX = 358, campoY = 172, campoW = 1226, campoH = 694;
@@ -26,25 +25,15 @@ class Modo1 extends Pantalla {
   final int PUNTOS_REPORTE = 30;        // puntos extra al reportar (cambia aqui el valor)
   final int BLOQUEOS_PARA_REPORTE = 4;  // bloqueos necesarios para poder reportar
 
-  Avatar avatar;
-  ArrayList<Mensaje> mensajes = new ArrayList<Mensaje>();
-  int estado = JUGANDO;
-  int puntos = 0;
-  int fondoAplicado = 0;
-  boolean pagado = false;               // true cuando ya se depositaron los puntos de esta partida
-  String moraleja = "";                 // mensaje final sobre sana convivencia
-  int bloqueados = 0;
-  int ultimoMs = 0;
-  int proximoSpawn = 0;
-  String aviso = "";
-  int avisoHasta = 0;
+  ArrayList<Mensaje> mensajes = new ArrayList<Mensaje>();   // mensajes que estan cayendo ahora
+  int bloqueados = 0;                   // toxicos bloqueados seguidos (al llegar a BLOQUEOS_PARA_REPORTE se puede reportar)
+  int ultimoMs = 0;                     // millis() del cuadro anterior (para calcular dt)
+  int proximoSpawn = 0;                 // millis() en que aparece el siguiente mensaje
+  String aviso = "";                    // texto temporal de la barra inferior
+  int avisoHasta = 0;                   // millis() hasta el que se muestra el aviso
+  int inicioPausa = 0;                  // millis() en que empezo la pausa (para compensar los temporizadores)
 
-  // pausa
-  MenuPausa menuPausa = new MenuPausa();
-  boolean pausado = false;
-  int inicioPausa = 0;
-  boolean volviendoDeConfig = false;    // true mientras se esta en Configuracion abierta desde la pausa
-
+  // Textos de los mensajes que caen (se reparten sin repetir, ver sacarTexto)
   String[] usuarios = {"user_2231", "lunita_09", "DarkMoth", "pixel_fan", "kevin.r", "nat_uninorte", "gamer404", "sofi_p",
     "xX_shadow_Xx", "camii.rios", "el_pana_07", "valeeee", "noctis_", "dani_c", "maria.dev", "tomi2003"};
   String[] toxicos = {
@@ -103,34 +92,28 @@ class Modo1 extends Pantalla {
   };
 
   Modo1() {
-    super("MODO 1", crearFondoModo1(invent.equipado[FONDO_M1]), 0);
-    fondoAplicado = invent.equipado[FONDO_M1];     // primera línea después del super
+    super("MODO 1", crearFondoModo1(invent.equipado[FONDO_M1]), 1);
+    fondoAplicado = invent.equipado[FONDO_M1];
+    // reparte los 3 carriles de caida a lo ancho del monitor
     float hueco = (campoW - 24 - carriles.length * msgW) / (carriles.length - 1);
     for (int i = 0; i < carriles.length; i++) carriles[i] = campoX + 12 + i * (msgW + hueco);
     avatar = new Avatar(40, 1080 - 40 - 250, 250, 80);
     reiniciar();
   }
 
+  // Armado del fondo del modo (lo usa ModoJuego al equipar otro fondo)
+  PGraphics crearFondo(int variante) {
+    return crearFondoModo1(variante);
+  }
+
+  // Empieza una partida nueva (se llama al entrar al modo)
   void reiniciar() {
-    int f = invent.equipado[FONDO_M1];
-    if (f != fondoAplicado) {
-      ponerFondo(crearFondoModo1(f));
-      fondoAplicado = f;
-    }
-    pagado = false;
-    // al volver de Configuracion (abierta desde la pausa) se conserva la partida
-    if (volviendoDeConfig) {
-      volviendoDeConfig = false;
-      return;
-    }
-    pausado = false;
+    if (!prepararReinicio(invent.equipado[FONDO_M1])) return;   // false = solo se volvia de Configuracion
     mensajes.clear();
     bolsaToxicos.clear();
     bolsaSanos.clear();
     ultimoTipo = -1;
     racha = 0;
-    estado = JUGANDO;
-    puntos = 0;
     bloqueados = 0;
     avatar.bienestar = 80;
     aviso = "";
@@ -140,6 +123,7 @@ class Modo1 extends Pantalla {
 
   // ---------- logica ----------
 
+  // Un paso del juego: mueve los mensajes, crea nuevos y revisa si termino la partida
   void actualizar() {
     int ahora = millis();
     float dt = min((ahora - ultimoMs) / 1000.0, 0.1);
@@ -170,12 +154,7 @@ class Modo1 extends Pantalla {
     if (puntos >= META_PUNTOS) estado = VICTORIA;
     else if (avatar.bienestar <= 0) estado = DERROTA;
 
-    // depositar una sola vez cuando termina la partida
-    if (estado != JUGANDO && !pagado) {
-      billetera.ganar(puntos);
-      moraleja = elegirMoraleja(1, estado == VICTORIA);
-      pagado = true;
-    }
+    depositarPuntos();      // si la partida termino, los puntos pasan a la billetera (una sola vez)
   }
 
   // Crea un mensaje nuevo en un carril libre
@@ -263,6 +242,7 @@ class Modo1 extends Pantalla {
     }
   }
 
+  // Tecla R: con suficientes bloqueos da bienestar y puntos extra
   void reportar() {
     if (bloqueados >= BLOQUEOS_PARA_REPORTE) {
       bloqueados = 0;
@@ -274,6 +254,7 @@ class Modo1 extends Pantalla {
     }
   }
 
+  // Muestra un texto en la barra inferior durante 1.8 segundos
   void avisar(String t) {
     aviso = t;
     avisoHasta = millis() + 1800;
@@ -281,65 +262,37 @@ class Modo1 extends Pantalla {
 
   // ---------- entrada ----------
 
-  // Pausa / reanuda. Al reanudar se corren los temporizadores el tiempo que duro la pausa.
+  // Al reanudar se corren los temporizadores el tiempo que duro la pausa (si no, caerian mensajes de golpe)
   void alternarPausa() {
     if (!pausado) {
-      pausado = true;
       inicioPausa = millis();
     } else {
-      pausado = false;
       int dur = millis() - inicioPausa;
       proximoSpawn += dur;
       avisoHasta += dur;
       ultimoMs = millis();
     }
+    super.alternarPausa();
   }
 
-  boolean capturaEsc() {
-    return estado == JUGANDO;      // si la partida termino, ESC vuelve al menu como siempre
-  }
-
-  int indiceEnPantallas() {
-    for (int i = 0; i < pantallas.length; i++) if (pantallas[i] == this) return i;
-    return 0;
-  }
-
+  // Teclas del modo: B = bloquear, A = aprobar, R = reportar (ESC y ENTER las maneja ModoJuego)
   void tecla(char k) {
-    if (k == ESC) {
-      if (estado == JUGANDO) alternarPausa();
-      return;
-    }
-    if (pausado) return;
-    if (estado != JUGANDO) {
-      if (k == ENTER || k == RETURN) reiniciar();
-      return;
-    }
+    if (teclaComun(k)) return;
     if (k == 'b' || k == 'B') clasificar(TOXICO);
     else if (k == 'a' || k == 'A') clasificar(SANO);
     else if (k == 'r' || k == 'R') reportar();
   }
 
+  // Clic: en pausa maneja el menu; al terminar la partida vuelve a la eleccion de modos
   int click() {
-    if (pausado) {
-      int op = menuPausa.click();
-      if (op == 0) {                         // Reanudar
-        alternarPausa();
-      } else if (op == 1) {                  // Configuracion (al darle Volver regresa aqui)
-        volviendoDeConfig = true;
-        configVolverA = indiceEnPantallas();
-        return 2;
-      } else if (op == 2) {                  // Salir al menu
-        pausado = false;
-        return 0;
-      }
-      return -1;
-    }
-    if (estado != JUGANDO) return 4;           // fin de partida: un clic vuelve a la eleccion de modos
+    if (pausado) return clickPausa();
+    if (estado != JUGANDO) return P_MODOS;     // fin de partida: un clic vuelve a la eleccion de modos
     return -1;
   }
 
   // ---------- dibujo ----------
 
+  // Un cuadro: actualiza la logica (si no hay pausa) y dibuja todo
   void draw() {
     cursor(ARROW);
     if (estado == JUGANDO && !pausado) actualizar();
@@ -357,6 +310,7 @@ class Modo1 extends Pantalla {
     popMatrix();
   }
 
+  // Dibuja los mensajes recortados a la zona del monitor, con la linea roja de peligro abajo
   void dibujarMensajes() {
     float e = escalaFondo;
     float cx = offsetX + campoX * e;
@@ -383,26 +337,16 @@ class Modo1 extends Pantalla {
     popStyle();
   }
 
+  // Dibuja el panel de bienestar / puntos / bloqueos y la barra inferior de avisos
   void dibujarHud() {
     float e = escalaFondo;
     pushStyle();
     rectMode(CORNER);
     textFont(fuente);
 
-    // panel superior izquierdo
-    float px = offsetX + 30 * e, py = offsetY + 30 * e, pw = 290 * e, ph = 175 * e;
-    noStroke();
-    fill(10, 10, 30, 215);
-    rect(px, py, pw, ph, 10 * e);
-
-    textAlign(LEFT, TOP);
-    fill(255);
-    textSize(20 * e);
-    text("BIENESTAR", px + 15 * e, py + 12 * e);
-    fill(60, 60, 90);
-    rect(px + 15 * e, py + 40 * e, pw - 30 * e, 20 * e, 4 * e);
-    fill(avatar.colorEstado());
-    rect(px + 15 * e, py + 40 * e, (pw - 30 * e) * avatar.bienestar / 100.0, 20 * e, 4 * e);
+    // panel superior izquierdo: bienestar (de ModoJuego) + puntos y bloqueos
+    dibujarPanelBienestar(175);
+    float px = offsetX + 30 * e, py = offsetY + 30 * e;
 
     fill(255);
     text("PUNTOS  " + puntos + " / " + META_PUNTOS, px + 15 * e, py + 76 * e);
@@ -455,42 +399,14 @@ class Modo1 extends Pantalla {
     popStyle();
   }
 
+  // Pantalla final de victoria o derrota (usa la plantilla de ModoJuego)
   void dibujarFin() {
-    float e = escalaFondo;
-    pushStyle();
-    rectMode(CORNER);
-    noStroke();
-    fill(0, 190);
-    rect(offsetX, offsetY, 1920 * e, 1080 * e);
-    textFont(fuente);
-    textAlign(CENTER, CENTER);
-    fill(estado == VICTORIA ? color(90, 220, 120) : color(240, 70, 70));
-    textSize(64 * e);
-    text(estado == VICTORIA ? "¡TURNO COMPLETADO!" : "IVANA NO AGUANTA MÁS", offsetX + 960 * e, offsetY + 300 * e);
-    fill(255);
-    textSize(28 * e);
-    text("Puntos: " + puntos, offsetX + 960 * e, offsetY + 370 * e);
-    text("Clic para elegir otro modo   ·   ENTER para reintentar   ·   ESC para volver al menú", offsetX + 960 * e, offsetY + 700 * e);
-    popStyle();
-    dibujarMoraleja(moraleja, estado == VICTORIA);
+    dibujarFin("¡TURNO COMPLETADO!", "IVANA NO AGUANTA MÁS", "Puntos: " + puntos,
+      "Clic para elegir otro modo   ·   ENTER para reintentar   ·   ESC para volver al menú");
   }
 }
 
-// Fondo del modo 1: PrimerModo.jpg a pantalla completa (usa imagenCover de PantallaJuego.pde)
+// Fondo del modo 1: PrimerModo.jpg (o la variante comprada en la tienda: PrimerModo_2.jpg ...)
 PGraphics crearFondoModo1(int variante) {
-  PGraphics pg = createGraphics(1920, 1080);
-  pg.beginDraw();
-  pg.background(40, 30, 70);
-  String sufijo = (variante == 0) ? "" : "_" + (variante + 1);          // PrimerModo_2.jpg, PrimerModo_3.jpg
-  PImage img = cargarImagenAlguna(new String[] {"PrimerModo" + sufijo + ".jpg", "PrimerModo" + sufijo + ".png"});
-  if (img == null) {                                                    // si aún no tienes la imagen: la original con otro tinte
-    img = loadImage("PrimerModo.jpg");
-    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}, {255, 190, 120}, {150, 255, 170}};
-    int vt = variante % tintes.length;
-    pg.tint(tintes[vt][0], tintes[vt][1], tintes[vt][2]);
-  }
-  if (img != null) imagenCover(pg, img);
-  pg.noTint();
-  pg.endDraw();
-  return pg;
+  return crearFondoVariante(new String[] {"PrimerModo"}, variante, false);
 }

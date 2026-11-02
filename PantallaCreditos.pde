@@ -2,7 +2,7 @@
 class PantallaCreditos extends Pantalla {
   PantallaCreditos() {
     super("CREDITOS", crearFondoCreditos(), 1);
-    Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondo), 0);
+    Ponerboton(0, new Boton("Volver", 1700, 43, 200, 65, fondo), P_MENU);
   }
 }
 

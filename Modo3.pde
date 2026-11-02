@@ -1,12 +1,14 @@
-// MODO 3: DE-ESCALATE!
-// Ivana modera conflictos en Vinculo: lee la situacion y elige la respuesta ASERTIVA entre tres.
-// Hereda de Pantalla (pantallas[8]). Reutiliza lo que ya existe en el proyecto:
-//   Avatar, MenuPausa, fuente, escalaFondo / offsetX / offsetY, imagenCover() y JUGANDO / VICTORIA / DERROTA (Modo1.pde)
+// =====================================================================================
+// MODO 3 (en el menu aparece como "MODO 2"): DE-ESCALATE!
+// Ivana modera conflictos en Vinculo: lee la situacion y elige la respuesta ASERTIVA entre tres
+// (las otras dos son una agresiva y una pasiva). Hereda de ModoJuego (pausa, puntos, avatar, estado).
 // Todo se define en coordenadas del canvas 1920x1080, igual que el resto de pantallas.
 //
 // Archivos que debe haber en la carpeta data:
 //   fondo_modo3.jpg (o .png)   -> escritorio con el monitor (la pantalla negra es donde va la ventana)
 //   Alertatroll.png (o .jpg)   -> cartel "ALERTA TROLL" (sin fondo; se recorta solo el borde transparente)
+//   casos_modo3.txt            -> los conflictos del juego (ver ese archivo para agregar mas)
+// =====================================================================================
 
 // fases dentro de un caso
 final int FASE_ELEGIR = 0;      // el jugador lee el conflicto y elige una respuesta
@@ -36,7 +38,7 @@ class Caso {
   }
 }
 
-class Modo3 extends Pantalla {
+class Modo3 extends ModoJuego {
   // ---------- geometria (canvas 1920x1080) ----------
   // Ventana "Conflicto.exe": cabe dentro de la pantalla negra del monitor de fondo_modo3
   // (zona negra aprox. x 625-1307, y 225-717). Ajusta estos valores y mira el resultado con la tecla D.
@@ -56,9 +58,7 @@ class Modo3 extends Pantalla {
   final float BIENESTAR_ERROR = 15;             // respuesta agresiva o pasiva: resta bienestar
   final int PUNTOS_ACIERTO = 60;                // acertar a la primera
   final int PUNTOS_ACIERTO_CON_ERRORES = 30;    // acertar despues de fallar
-  final int PANTALLA_MODOS = 4;                 // pantallas[4] = seleccion de modos (al ganar se vuelve ahi)
 
-  Avatar avatar;
   PImage alertaTroll;
   ArrayList<Caso> banco = new ArrayList<Caso>();      // todos los conflictos disponibles
   ArrayList<Caso> partida = new ArrayList<Caso>();    // los que tocan en esta partida
@@ -78,21 +78,11 @@ class Modo3 extends Pantalla {
   float tamTitulo, tamTexto, tamRetro, tamTituloRes;
   float[] tamOpcion = new float[3];
 
-  int estado = JUGANDO;
-  int puntos = 0;
-  boolean pagado = false;                   // true cuando ya se depositaron los puntos de esta partida
-  String moraleja = "";                     // mensaje final sobre sana convivencia
   int sacudidaHasta = 0;                    // el troll tiembla al fallar
   float[] brillo = new float[3];            // animacion al pasar el mouse por los botones
 
-  // pausa (igual que el Modo 1)
-  MenuPausa menuPausa = new MenuPausa();
-  boolean pausado = false;
-  boolean volviendoDeConfig = false;        // true mientras se esta en Configuracion abierta desde la pausa
-  int fondoAplicado = 0;                    // variante de fondo (tienda) que se esta mostrando
-
   Modo3() {
-    super("MODO 3", crearFondoModo3(invent.equipado[FONDO_M3]), 0);
+    super("MODO 3", crearFondoModo3(invent.equipado[FONDO_M3]), 3);
     fondoAplicado = invent.equipado[FONDO_M3];
     opX0 = (1920 - (3 * opW + 2 * opGap)) / 2;
 
@@ -104,23 +94,14 @@ class Modo3 extends Pantalla {
     reiniciar();
   }
 
-  void reiniciar() {
-    // si compraste/equipaste otro fondo en la tienda, se cambia al entrar al modo
-    int f = invent.equipado[FONDO_M3];
-    if (f != fondoAplicado) {
-      ponerFondo(crearFondoModo3(f));
-      fondoAplicado = f;
-    }
+  // Armado del fondo del modo (lo usa ModoJuego al equipar otro fondo)
+  PGraphics crearFondo(int variante) {
+    return crearFondoModo3(variante);
+  }
 
-    // al volver de Configuracion (abierta desde la pausa) se conserva la partida
-    if (volviendoDeConfig) {
-      volviendoDeConfig = false;
-      return;
-    }
-    pausado = false;
-    estado = JUGANDO;
-    puntos = 0;
-    pagado = false;
+  // Empieza una partida nueva (se llama al entrar al modo)
+  void reiniciar() {
+    if (!prepararReinicio(invent.equipado[FONDO_M3])) return;   // false = solo se volvia de Configuracion
     avatar.bienestar = BIENESTAR_INICIAL;
     avatar.limpiarReaccion();
     armarPartida();
@@ -143,6 +124,7 @@ class Modo3 extends Pantalla {
     while (partida.size() > TOTAL_CASOS) partida.remove(partida.size() - 1);
   }
 
+  // Prepara el caso actual: baraja el orden de las respuestas y calcula el tamano de letra de cada texto
   void cargarCaso() {
     caso = partida.get(casoActual);
 
@@ -218,35 +200,14 @@ class Modo3 extends Pantalla {
       elegida = -1;
     }
 
-    // depositar una sola vez cuando termina la partida
-    if (estado != JUGANDO && !pagado) {
-      billetera.ganar(puntos);
-      moraleja = elegirMoraleja(3, estado == VICTORIA);
-      pagado = true;
-    }
+    depositarPuntos();      // si la partida termino, los puntos pasan a la billetera (una sola vez)
   }
 
   // ---------- entrada ----------
 
-  boolean capturaEsc() {
-    return estado == JUGANDO;      // si la partida termino, ESC vuelve al menu como siempre
-  }
-
-  int indiceEnPantallas() {
-    for (int i = 0; i < pantallas.length; i++) if (pantallas[i] == this) return i;
-    return 0;
-  }
-
+  // Teclas del modo: A/B/C (o 1/2/3) eligen respuesta; ENTER o espacio continua tras leer la explicacion
   void tecla(char k) {
-    if (k == ESC) {
-      if (estado == JUGANDO) pausado = !pausado;
-      return;
-    }
-    if (pausado) return;
-    if (estado != JUGANDO) {
-      if (k == ENTER || k == RETURN) reiniciar();
-      return;
-    }
+    if (teclaComun(k)) return;
     if (fase == FASE_RESULTADO) {
       if (k == ENTER || k == RETURN || k == ' ') continuar();
       return;
@@ -269,22 +230,10 @@ class Modo3 extends Pantalla {
     return -1;
   }
 
+  // Clic: en pausa maneja el menu; si no, elige una respuesta o continua tras la explicacion
   int click() {
-    if (pausado) {
-      int op = menuPausa.click();
-      if (op == 0) {                         // Reanudar
-        pausado = false;
-      } else if (op == 1) {                  // Configuracion (al darle Volver regresa aqui)
-        volviendoDeConfig = true;
-        configVolverA = indiceEnPantallas();
-        return 2;
-      } else if (op == 2) {                  // Salir al menu
-        pausado = false;
-        return 0;
-      }
-      return -1;
-    }
-    if (estado == VICTORIA) return PANTALLA_MODOS;           // victoria: de vuelta a la seleccion de modos
+    if (pausado) return clickPausa();
+    if (estado == VICTORIA) return P_MODOS;           // victoria: de vuelta a la seleccion de modos
     if (estado == DERROTA) {                                 // derrota: reintentar
       reiniciar();
       return -1;
@@ -300,45 +249,23 @@ class Modo3 extends Pantalla {
 
   // ---------- geometria auxiliar ----------
 
-  float pantX(float cx) {
-    return offsetX + cx * escalaFondo;
-  }    // canvas -> ventana
-  float pantY(float cy) {
-    return offsetY + cy * escalaFondo;
-  }
+  float pantX(float cx) { return offsetX + cx * escalaFondo; }    // canvas -> ventana
+  float pantY(float cy) { return offsetY + cy * escalaFondo; }
 
-  float opXi(int i) {
-    return opX0 + i * (opW + opGap);
-  }
+  float opXi(int i) { return opX0 + i * (opW + opGap); }
 
   float trollW() {
     if (alertaTroll == null) return 150;
     return trollH * alertaTroll.width / alertaTroll.height;
   }
-  float infoY() {
-    return vy + barraH + 10;
-  }                    // fila del cartel y los datos del caso
-  float infoX() {
-    return vx + 16 + trollW() + 16;
-  }
-  float infoW() {
-    return vx + vw - 16 - infoX();
-  }
-  float papelX() {
-    return vx + 16;
-  }                            // "hoja" con el texto del conflicto
-  float papelW() {
-    return vw - 32;
-  }
-  float papelY() {
-    return infoY() + trollH + 10;
-  }
-  float franjaY() {
-    return vy + vh - 14 - franjaH;
-  }
-  float papelH() {
-    return franjaY() - 8 - papelY();
-  }
+  float infoY() { return vy + barraH + 10; }                    // fila del cartel y los datos del caso
+  float infoX() { return vx + 16 + trollW() + 16; }
+  float infoW() { return vx + vw - 16 - infoX(); }
+  float papelX() { return vx + 16; }                            // "hoja" con el texto del conflicto
+  float papelW() { return vw - 32; }
+  float papelY() { return infoY() + trollH + 10; }
+  float franjaY() { return vy + vh - 14 - franjaH; }
+  float papelH() { return franjaY() - 8 - papelY(); }
 
   // Texto dentro de una caja dada en canvas (usa el textAlign / fill que haya puesto quien llama)
   void textoCaja(String s, float sz, float x, float y, float w, float h) {
@@ -350,6 +277,7 @@ class Modo3 extends Pantalla {
 
   // ---------- dibujo ----------
 
+  // Un cuadro: dibuja la ventana del conflicto, las 3 opciones, el panel y el avatar
   void draw() {
     cursor(ARROW);
 
@@ -367,6 +295,7 @@ class Modo3 extends Pantalla {
     popMatrix();
   }
 
+  // Dibuja la ventana "Conflicto.exe": cartel troll, datos del caso, hoja con el texto y franja de ayuda
   void dibujarVentana() {
     float e = escalaFondo;
     pushStyle();
@@ -494,6 +423,7 @@ class Modo3 extends Pantalla {
     popStyle();
   }
 
+  // Dibuja los 3 botones de respuesta (colores distintos si acertaste, fallaste o estan apagados)
   void dibujarOpciones() {
     float e = escalaFondo;
     int sobre = encima();
@@ -558,25 +488,15 @@ class Modo3 extends Pantalla {
     popStyle();
   }
 
+  // Panel de bienestar, caso actual y puntos
   void dibujarHud() {
     float e = escalaFondo;
     pushStyle();
     rectMode(CORNER);
     textFont(fuente);
 
-    float px = pantX(30), py = pantY(30), pw = 290 * e, ph = 140 * e;
-    noStroke();
-    fill(10, 10, 30, 215);
-    rect(px, py, pw, ph, 10 * e);
-
-    textAlign(LEFT, TOP);
-    fill(255);
-    textSize(20 * e);
-    text("BIENESTAR", px + 15 * e, py + 12 * e);
-    fill(60, 60, 90);
-    rect(px + 15 * e, py + 40 * e, pw - 30 * e, 20 * e, 4 * e);
-    fill(avatar.colorEstado());
-    rect(px + 15 * e, py + 40 * e, (pw - 30 * e) * avatar.bienestar / 100.0, 20 * e, 4 * e);
+    dibujarPanelBienestar(140);          // panel con la barra de bienestar (de ModoJuego)
+    float px = pantX(30), py = pantY(30);
 
     fill(255);
     text("CASO  " + min(casoActual + 1, partida.size()) + " / " + partida.size(), px + 15 * e, py + 76 * e);
@@ -599,275 +519,46 @@ class Modo3 extends Pantalla {
     popStyle();
   }
 
+  // Pantalla final de victoria o derrota (usa la plantilla de ModoJuego)
   void dibujarFin() {
-    float e = escalaFondo;
     boolean gano = (estado == VICTORIA);
-    pushStyle();
-    rectMode(CORNER);
-    noStroke();
-    fill(0, 190);
-    rect(offsetX, offsetY, 1920 * e, 1080 * e);
-    textFont(fuente);
-    textAlign(CENTER, CENTER);
-    fill(gano ? color(90, 220, 120) : color(240, 70, 70));
-    textSize(64 * e);
-    text(gano ? "¡CONFLICTOS RESUELTOS!" : "LA SITUACIÓN SE DESCONTROLÓ", pantX(960), pantY(300));
-    fill(255);
-    textSize(28 * e);
-    if (gano) text("Ivana calmó la red.   Puntos: " + puntos + "   Bienestar: " + (int) avatar.bienestar, pantX(960), pantY(370));
-    else      text("Puntos: " + puntos + "   Casos resueltos: " + casoActual + " / " + partida.size(), pantX(960), pantY(370));
-    textSize(24 * e);
-    if (gano) text("Clic: elegir otro modo   ·   ENTER: jugar de nuevo   ·   ESC: menú principal", pantX(960), pantY(700));
-    else      text("Clic o ENTER para reintentar   ·   ESC para volver al menú", pantX(960), pantY(700));
-    dibujarMoraleja(moraleja, gano);
-    popStyle();
+    String resumen = gano ? "Ivana calmó la red.   Puntos: " + puntos + "   Bienestar: " + (int) avatar.bienestar
+                          : "Puntos: " + puntos + "   Casos resueltos: " + casoActual + " / " + partida.size();
+    String ayuda = gano ? "Clic: elegir otro modo   ·   ENTER: jugar de nuevo   ·   ESC: menú principal"
+                        : "Clic o ENTER para reintentar   ·   ESC para volver al menú";
+    dibujarFin("¡CONFLICTOS RESUELTOS!", "LA SITUACIÓN SE DESCONTROLÓ", resumen, ayuda);
   }
 
   // ---------- banco de conflictos ----------
-  // Orden de cada caso: asertiva, agresiva, pasiva (cada una con su explicacion).
-  // Tono: conversacion normal, nombres comunes y sin groserias ni insultos (las respuestas malas se notan por
-  // su actitud: amenazar o ignorar). Mantener los textos cortos: caso <= ~190 caracteres, respuestas <= ~125, explicaciones <= ~110.
+  // Los casos estan en data/casos_modo3.txt (una linea por caso, 9 campos separados por |). Ver ese archivo
+  // para agregar o editar casos sin tocar el codigo. Cada partida elige TOTAL_CASOS al azar.
   void crearCasos() {
-    banco.add(new Caso(
-      "Burla en una foto",
-      "Camila   y   Andrés",
-      "Andrés comentó en la foto de Camila: \"Qué foto tan rara, mejor bórrala\". Varias personas reaccionaron con risas y Camila respondió: \"Eres muy grosero, no vuelvas a escribirme\".",
-      "Andrés, ese comentario incomodó a Camila; te pido que lo borres. Camila, entiendo tu molestia; hablemos por privado.",
-      "Describes lo ocurrido sin acusar, pides una acción concreta y ofreces un espacio tranquilo para hablar.",
-      "Los dos se están comportando mal. Si siguen así, voy a suspender sus cuentas.",
-      "Amenazar con sanciones los pone a la defensiva y la discusión se hace más grande.",
-      "Mejor no intervenir, seguro se les pasa solo. Silencio el hilo y ya.",
-      "Ignorarlo no ayuda: las risas continúan y Camila se queda sola frente a las burlas."));
-
-    banco.add(new Caso(
-      "Rumor en el grupo",
-      "Laura   en   Grupo de Cálculo II",
-      "En el grupo circula una captura que dice que Laura copió en el parcial. Nadie lo ha comprobado, pero ya hay varios comentarios en su contra. Laura escribe: \"Es mentira\".",
-      "Es un rumor sin pruebas; dejemos de compartir la captura. Laura, cuéntanos tu versión con calma y lo revisamos.",
-      "Frenas la propagación, no culpas a nadie y le das a Laura la oportunidad de explicarse.",
-      "Dejen de hablar de lo que no saben. Quien vuelva a compartir la captura será suspendido.",
-      "Regañar a todos y amenazar cierra el diálogo: la gente se defiende en lugar de escuchar.",
-      "Laura, no les prestes atención, ya se les pasará. Quizá es mejor que no entres al grupo unos días.",
-      "Pedirle que se aleje no resuelve el rumor ni la protege; el problema sigue creciendo."));
-
-    banco.add(new Caso(
-      "Discusión tras un partido",
-      "Sebastián   y   Mateo",
-      "Tras perder un partido en línea, Sebastián le escribió a Mateo: \"Jugaste mal y nos hiciste perder\". Mateo respondió ofendiendo a la familia de Sebastián y el chat se llenó de espectadores.",
-      "Perder frustra, lo entiendo. Hablen de la jugada y no de la persona, y dejen a las familias fuera. ¿Revancha mañana?",
-      "Reconoces la frustración, separas la jugada de la persona y llevas la energía hacia algo positivo.",
-      "Están actuando como niños. Aprendan a perder o salgan del servidor.",
-      "Burlarte de su reacción los hace sentir juzgados y alimenta la pelea; una ofensa no se corrige con otra.",
-      "No me corresponde opinar, resuélvanlo entre ustedes.",
-      "Mantenerte al margen parece neutral, pero el chat lo toma como permiso para seguir con las ofensas."));
-
-    banco.add(new Caso(
-      "La nueva del grupo",
-      "María   en   Comunidad de Programación",
-      "María, nueva en la comunidad, hizo una pregunta básica. Alguien le respondió: \"Eso se busca en Google, no hagas perder el tiempo\". Ella escribió: \"Mejor me salgo del grupo\".",
-      "María, tu pregunta es válida. Te dejo una guía y aquí sigo para ayudarte. Les pido a todos responder con respeto.",
-      "Reconoces a María, le das ayuda real y recuerdas la norma del grupo sin atacar a nadie.",
-      "Quien le respondió así fue grosero. Voy a poner una advertencia pública para todos.",
-      "Una advertencia general incomoda a quienes no hicieron nada y deja a María en el centro de la atención.",
-      "María, no les hagas caso. Si te sientes mal, quizá es mejor que te salgas.",
-      "Pedirle que se vaya castiga a quien recibió el mal trato, y en la comunidad todo sigue igual."));
-
-    banco.add(new Caso(
-      "Hilo fuera de control",
-      "Daniela   y   el hilo",
-      "Alguien publicó un comentario antiguo de Daniela. El hilo ya tiene 300 respuestas y Julián escribe: \"Pásenme su dirección y voy a hablar con ella\".",
-      "Compartir datos personales está prohibido y puede hacer daño. Si hay quejas, repórtenlas y las revisamos. Cierro el hilo.",
-      "Marcas un límite claro, ofreces un camino correcto (reportar) y proteges a Daniela sin humillar a nadie.",
-      "Todos ustedes están actuando muy mal. Suspendo las cuentas de quienes participaron.",
-      "Sancionar en masa te enfrenta con todo el hilo y no explica qué se hizo mal.",
-      "Es solo una conversación en internet, nadie va a ir a ningún lado. No exageren.",
-      "Minimizar una amenaza real es peligroso: pedir una dirección es acoso y hay que detenerlo ya."));
-
-    banco.add(new Caso(
-      "Mensajes sin respuesta",
-      "Valentina   y   Daniel",
-      "Valentina escribió: \"Llevas una semana sin responderme, no te importa nuestra amistad\". Daniel contestó: \"Estaba en exámenes, no seas exagerada\". Ahora ninguno quiere hablar.",
-      "Valentina, te sentiste ignorada y eso duele. Daniel, estabas ocupado, no fue tu intención. Cuéntense cómo se sintieron.",
-      "Reconoces lo que cada uno sintió sin culpar a nadie. Hablar en primera persona abre la conversación.",
-      "Valentina, no exageres. Daniel, responder un mensaje toma un minuto.",
-      "Decirle exagerada a alguien invalida lo que siente: los dos terminan sintiéndose juzgados.",
-      "Son cosas que pasan. Mejor no hablen del tema.",
-      "Esconder el problema no lo borra: queda el resentimiento y la amistad se enfría en silencio."));
-
-    banco.add(new Caso(
-      "Interrupciones en directo",
-      "Tomás   y   Ricardo",
-      "En la transmisión en vivo de Tomás, Ricardo llena el chat con el mismo mensaje cada diez segundos. Tomás responde: \"Si vuelves a entrar, te reporto\" y el chat se divide en bandos.",
-      "Ricardo, repetir mensajes interrumpe la transmisión: por favor, para o te silencio diez minutos. Tomás, gracias por la calma.",
-      "Pones un límite claro con una consecuencia concreta y reconoces a quien mantuvo la calma.",
-      "Ricardo, estás arruinando todo. Fuera de aquí, te bloqueo para siempre.",
-      "Atacar a Ricardo le da lo que busca: una reacción. Responder con ofensas solo lo motiva a seguir.",
-      "El chat es así, hay que aguantarse. Que cada uno haga lo que quiera.",
-      "Dejar que continúe castiga a todo el chat y le dice a Ricardo que no hay consecuencias."));
-  }
-}
-
-// ---------- utilidades (fuera de la clase, como crearFondoModo1 / imagenCover) ----------
-
-// Fondo del modo 3: fondo_modo3 a pantalla completa (usa imagenCover de PantallaJuego.pde)
-PGraphics crearFondoModo3(int variante) {
-  PGraphics pg = createGraphics(1920, 1080);
-  pg.beginDraw();
-  pg.background(40, 30, 70);                      // por si falta la imagen
-  // variante 0: fondo_modo3.jpg   variante 1: fondo_modo3_2.jpg   variante 2: fondo_modo3_3.jpg
-  String s = (variante == 0) ? "" : "_" + (variante + 1);
-  PImage img = cargarImagenAlguna(new String[] {"fondo_modo3" + s + ".jpg", "fondo_modo3" + s + ".png",
-                                                 "Fondo_modo3" + s + ".jpg", "Fondo_modo3" + s + ".png"});
-  if (img == null && variante > 0) {              // aun no hay imagen propia: la original con otro tinte
-    img = cargarImagenAlguna(new String[] {"fondo_modo3.jpg", "fondo_modo3.png", "Fondo_modo3.jpg", "Fondo_modo3.png"});
-    int[][] tintes = {{255, 255, 255}, {150, 170, 255}, {255, 170, 200}, {255, 190, 120}, {150, 255, 170}};
-    pg.tint(tintes[variante][0], tintes[variante][1], tintes[variante][2]);
-  }
-  if (img != null) {
-    imagenCover(pg, img);
-  } else {
-    pg.noStroke();
-    pg.fill(0);
-    pg.rect(625, 225, 682, 492, 30);              // monitor de respaldo
-  }
-  pg.noTint();
-  pg.endDraw();
-  return pg;
-}
-
-// Carga la primera imagen que exista en data (sin llenar la consola de errores). null si no hay ninguna.
-PImage cargarImagenAlguna(String[] nombres) {
-  for (String n : nombres) {
-    if (new File(dataPath(n)).exists()) return loadImage(n);
-  }
-  return null;
-}
-
-// Si la imagen NO trae transparencia (por ejemplo un JPG con fondo negro o blanco), vuelve transparente
-// el fondo liso. Parte de los bordes y avanza solo por pixeles parecidos al color de la esquina,
-// asi no borra los negros del interior del dibujo. Si ya trae transparencia, la devuelve igual.
-PImage quitarFondo(PImage img) {
-  img.loadPixels();
-  int w = img.width, h = img.height;
-  int[] px = img.pixels;
-  if (alpha(px[0]) < 250) {
-    // Ya trae transparencia. OJO: si el archivo es un PNG guardado con extension .jpg, Processing
-    // lo carga como RGB e ignora el alfa (los pixeles transparentes salen NEGROS). Se copia a ARGB.
-    PImage listo = createImage(w, h, ARGB);
-    listo.loadPixels();
-    System.arraycopy(px, 0, listo.pixels, 0, w * h);
-    listo.updatePixels();
-    return listo;
-  }
-
-  int bg = px[0];
-  float br = red(bg), bgr = green(bg), bb = blue(bg);
-  boolean[] visto = new boolean[w * h];
-  int[] pila = new int[w * h];
-  int n = 0;
-
-  // semillas: todos los pixeles del borde que se parezcan al fondo
-  for (int x = 0; x < w; x++) {
-    int a = x, b = (h - 1) * w + x;
-    if (!visto[a] && parecidoA(px[a], br, bgr, bb)) {
-      visto[a] = true;
-      pila[n++] = a;
-    }
-    if (!visto[b] && parecidoA(px[b], br, bgr, bb)) {
-      visto[b] = true;
-      pila[n++] = b;
-    }
-  }
-  for (int y = 0; y < h; y++) {
-    int a = y * w, b = y * w + w - 1;
-    if (!visto[a] && parecidoA(px[a], br, bgr, bb)) {
-      visto[a] = true;
-      pila[n++] = a;
-    }
-    if (!visto[b] && parecidoA(px[b], br, bgr, bb)) {
-      visto[b] = true;
-      pila[n++] = b;
-    }
-  }
-
-  // relleno por inundacion hacia adentro
-  while (n > 0) {
-    int i = pila[--n];
-    int x = i % w, y = i / w;
-    if (x > 0     && !visto[i - 1] && parecidoA(px[i - 1], br, bgr, bb)) {
-      visto[i - 1] = true;
-      pila[n++] = i - 1;
-    }
-    if (x < w - 1 && !visto[i + 1] && parecidoA(px[i + 1], br, bgr, bb)) {
-      visto[i + 1] = true;
-      pila[n++] = i + 1;
-    }
-    if (y > 0     && !visto[i - w] && parecidoA(px[i - w], br, bgr, bb)) {
-      visto[i - w] = true;
-      pila[n++] = i - w;
-    }
-    if (y < h - 1 && !visto[i + w] && parecidoA(px[i + w], br, bgr, bb)) {
-      visto[i + w] = true;
-      pila[n++] = i + w;
-    }
-  }
-
-  PImage out = createImage(w, h, ARGB);
-  out.loadPixels();
-  for (int i = 0; i < w * h; i++) out.pixels[i] = visto[i] ? 0 : (px[i] | 0xFF000000);
-  out.updatePixels();
-  return out;
-}
-
-// true si el color c se parece a (r, g, b); la tolerancia absorbe el ruido de compresion del JPG
-boolean parecidoA(int c, float r, float g, float b) {
-  return abs(red(c) - r) + abs(green(c) - g) + abs(blue(c) - b) < 90;
-}
-
-// Quita el borde transparente de un PNG (si la imagen no tiene transparencia, la devuelve igual)
-PImage recortarTransparente(PImage img) {
-  img.loadPixels();
-  int minX = img.width, minY = img.height, maxX = -1, maxY = -1;
-  for (int y = 0; y < img.height; y++) {
-    for (int x = 0; x < img.width; x++) {
-      if (alpha(img.pixels[y * img.width + x]) > 20) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+    String[] lineas = loadStrings(dataPath("casos_modo3.txt"));
+    if (lineas == null) lineas = new String[0];
+    for (String l : lineas) {
+      l = l.trim();
+      if (l.length() == 0 || l.startsWith("#")) continue;         // lineas vacias o comentarios
+      String[] c = split(l, '|');
+      if (c.length < 9) {
+        println("casos_modo3.txt: linea con menos de 9 campos, se ignora: " + l);
+        continue;
       }
+      for (int k = 0; k < c.length; k++) c[k] = c[k].trim();
+      banco.add(new Caso(c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8]));
+    }
+    // Sin el archivo el juego igual funciona (con un solo caso de emergencia)
+    if (banco.isEmpty()) {
+      println("No se encontro data/casos_modo3.txt: se usa un caso de emergencia.");
+      banco.add(new Caso("Burla en una foto", "Camila   y   Andrés",
+        "Andrés comentó en la foto de Camila: \"Qué foto tan rara, mejor bórrala\".",
+        "Andrés, ese comentario incomodó a Camila; bórralo, por favor.", "Describes lo ocurrido sin acusar y pides una acción concreta.",
+        "Andrés, eres un abusivo. Si pasa otra vez, te saco del grupo.", "Amenazar los pone a la defensiva.",
+        "Cada uno tiene su punto. Dejemos que se enfríe.", "Ignorarlo no ayuda: las burlas continúan."));
     }
   }
-  if (maxX < 0) return img;
-  return img.get(minX, minY, maxX - minX + 1, maxY - minY + 1);
 }
 
-// Cuantas lineas ocupa un texto en una caja de ese ancho, con el textFont / textSize actuales
-int contarLineasTexto(String s, float ancho) {
-  String[] palabras = split(s, " ");
-  int lineas = 1;
-  String actual = "";
-  for (String p : palabras) {
-    String prueba = actual.length() == 0 ? p : actual + " " + p;
-    if (textWidth(prueba) <= ancho) actual = prueba;
-    else {
-      lineas++;
-      actual = p;
-    }
-  }
-  return lineas;
-}
-
-// Mayor tamano de letra (entre minSz y maxSz) con el que el texto cabe en una caja ancho x alto
-float ajustarTamano(String s, float ancho, float alto, float maxSz, float minSz) {
-  pushStyle();
-  textFont(fuente);
-  float sz = maxSz;
-  while (sz > minSz) {
-    textSize(sz);
-    if (contarLineasTexto(s, ancho * 0.96) * sz * 1.25 <= alto) break;
-    sz -= 1;
-  }
-  popStyle();
-  return sz;
+// Fondo del modo 3: fondo_modo3.jpg (o la variante comprada en la tienda: fondo_modo3_2.jpg ...)
+PGraphics crearFondoModo3(int variante) {
+  return crearFondoVariante(new String[] {"fondo_modo3", "Fondo_modo3"}, variante, true);
 }

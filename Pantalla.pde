@@ -1,33 +1,37 @@
+// =====================================================================================
+// Pantalla: clase BASE de todas las pantallas del juego (menu, creditos, modos, tienda...).
+// Cada pantalla tiene un fondo, una lista de botones y a donde lleva cada boton.
+// Las pantallas especiales (Modo1, Modo3, tienda...) heredan de esta clase y reescriben
+// los metodos que necesiten (draw, click, tecla...).
+// =====================================================================================
 class Pantalla {
   String nombre;
-  PImage fondo;
-  PImage fondoEsc;
+  PImage fondo;          // imagen original (el lienzo virtual, normalmente 1920x1080)
+  PImage fondoEsc;       // la misma imagen ya escalada al tamano de la ventana
   Boton[] botones;
-  int[] destinos;
-  int i;
+  int[] destinos;        // destinos[i] = a que pantalla (indice de pantallas[]) lleva botones[i]
 
+  // cb = cantidad de botones que tendra la pantalla
   Pantalla(String nombre, PImage fondo, int cb) {
     this.nombre = nombre;
-    this.fondo = fondo;
-    float esc = min((float) width / fondo.width, (float) height / fondo.height);
-    fondoEsc = fondo.get();
-    fondoEsc.resize(round(fondo.width * esc), round(fondo.height * esc));
+    ponerFondo(fondo);
     botones = new Boton[cb];
     destinos = new int[cb];
   }
 
+  // Cambia el fondo (tambien se usa al comprar un fondo nuevo en la tienda)
   void ponerFondo(PImage nuevo) {
     fondo = nuevo;
-    float esc = min((float) width / nuevo.width, (float) height / nuevo.height);
-    fondoEsc = nuevo.get();
-    fondoEsc.resize(round(nuevo.width * esc), round(nuevo.height * esc));
+    fondoEsc = escalarPantalla(nuevo);
   }
 
+  // Pone el boton i y la pantalla a la que lleva
   void Ponerboton(int i, Boton boton, int destino) {
     botones[i] = boton;
     destinos[i] = destino;
   }
 
+  // Anima y dibuja los botones; cambia el cursor a manito si el mouse esta encima de alguno
   void draw() {
     boolean encima = false;
     for (Boton b : botones) {
@@ -40,8 +44,8 @@ class Pantalla {
     cursor(encima ? HAND : ARROW);
   }
 
+  // Clic del mouse. Devuelve la pantalla a la que hay que ir, o -1 si no se pulso ningun boton
   int click() {
-
     for (int i = 0; i < botones.length; i++) {
       if (botones[i].estaEncima(mouseX, mouseY)) {
         botones[i].presionar();
@@ -51,24 +55,42 @@ class Pantalla {
     return -1;
   }
 
-  void reiniciar() {
+  void reiniciar() {         // se llama al entrar a la pantalla (las que lo necesitan lo reescriben)
   }
 
-  void tecla(char k) {
+  void tecla(char k) {       // se llama al pulsar una tecla (las que lo necesitan lo reescriben)
   }
 
-  // true si la pantalla quiere manejar ESC ella misma (el Modo 1 lo usa para la pausa)
+  // true si la pantalla quiere manejar ESC ella misma (los modos lo usan para la pausa)
   boolean capturaEsc() {
     return false;
   }
 }
 
-// version corta: la que ya usas (fondo de color plano)
+// ---------------------------------------------------------------------------------
+// Dibujo de ventanas estilo Windows XP (Configuracion, Creditos, Tienda)
+// ---------------------------------------------------------------------------------
+
+// Boton redondeado azul claro dibujado en un PGraphics (el que se ve en "Volver", "Jugar", etc.)
+void dibujarBotonXP(PGraphics pg, String texto, float x, float y, float w, float h) {
+  pg.rectMode(CORNER);
+  pg.fill(150, 179, 230);
+  pg.stroke(20, 20, 60);
+  pg.strokeWeight(6);
+  pg.rect(x, y, w, h, 20);
+  pg.fill(20, 20, 60);
+  pg.textAlign(CENTER, CENTER);
+  pg.textSize(37);
+  pg.text(texto, x + w / 2, y + h / 2);
+}
+
+// Ventana XP con fondo de color plano
 void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver) {
   ventanaxp(pg, titulo, xTitulo, volver, null);
 }
 
-// version con imagen de fondo (si fondoImg es null, usa el color plano)
+// Ventana XP con imagen de fondo (si fondoImg es null, usa el color plano).
+// volver = true dibuja tambien el boton "Volver" arriba a la derecha.
 void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver, PImage fondoImg) {
   pg.textFont(fuente);
   if (fondoImg != null) imagenCover(pg, fondoImg);
@@ -79,17 +101,7 @@ void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver, PImag
   float dx = (1350 - vw) / 2;     // 125
   float dy = (950 - vh) / 2;      // 75
 
-  if (volver) {
-    pg.rectMode(CORNER);
-    pg.fill(150, 179, 230);
-    pg.stroke(20, 20, 60);
-    pg.strokeWeight(6);
-    pg.rect(1700, 43, 200, 65, 20);
-    pg.fill(20, 20, 60);
-    pg.textAlign(CENTER, CENTER);
-    pg.textSize(37);
-    pg.text("Volver", 1801, 75);
-  }
+  if (volver) dibujarBotonXP(pg, "Volver", 1700, 43, 200, 65);
 
   pg.rectMode(CENTER);
   pg.fill(94, 104, 115);
@@ -113,12 +125,4 @@ void ventanaxp(PGraphics pg, String titulo, float xTitulo, boolean volver, PImag
   pg.text(titulo, xTitulo + dx, 67 + dy);
 
   pg.rectMode(CORNER);
-}
-
-PImage escalarPantalla(PImage img) {
-  float esc = min((float) width / img.width, (float) height / img.height);
-  PImage copia = img.get();
-  copia.resize(round(img.width * esc), round(img.height * esc));
-
-  return copia;
 }

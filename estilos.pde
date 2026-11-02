@@ -1,3 +1,7 @@
+// =====================================================================================
+// Estilos de bordes que se compran en la tienda (se dibujan con rect() y colores, no con imagenes).
+// =====================================================================================
+
 // Borde de los mensajes del Modo 1: 0 Clásico, 1 Neón, 2 Dorado, 3 Rosa doble, 4 Fuego, 5 Hielo
 void marcoMensaje(float x, float y, float w, float h, int estilo, boolean objetivo) {
   float e = escalaFondo;
@@ -74,4 +78,4 @@ void marcoOpcion(float x, float y, float w, float h, color relleno, color borde,
     noFill(); stroke(190, 255, 200); strokeWeight(2 * e);
     rect(x + 10 * e, y + 10 * e, w - 20 * e, h - 20 * e, 3 * e);
   }
-}
+}

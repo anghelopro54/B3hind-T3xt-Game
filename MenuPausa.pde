@@ -1,5 +1,7 @@
-// Menu de pausa del Modo 1: ventana con 3 botones (Reanudar, Configuracion, Salir al menu).
-// Todo se define en coordenadas del canvas 1920x1080, igual que el resto de pantallas.
+// =====================================================================================
+// Menu de pausa de los modos de juego: ventana con 3 botones (Reanudar, Configuracion, Salir al menu).
+// Lo usa ModoJuego. Todo se define en coordenadas del canvas 1920x1080, igual que el resto de pantallas.
+// =====================================================================================
 class MenuPausa {
   String[] etiquetas = {"Reanudar", "Configuración", "Salir al menú"};
 
@@ -10,6 +12,7 @@ class MenuPausa {
 
   float[] brillo = new float[3];       // 0..1, animacion al pasar el mouse
 
+  // Posicion vertical del boton i
   float botonY(int i) { return by0 + i * (bh + hueco); }
 
   // Boton (0, 1 o 2) bajo el mouse, o -1
@@ -27,6 +30,7 @@ class MenuPausa {
     return encima();
   }
 
+  // Dibuja el velo oscuro, la ventana y los botones (con brillo al pasar el mouse)
   void dibujar() {
     float e = escalaFondo;
     int sobre = encima();
