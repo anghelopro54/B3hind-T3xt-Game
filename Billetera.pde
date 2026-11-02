@@ -20,7 +20,7 @@ class Billetera {
   // Deja los puntos en su valor inicial y lo escribe en data/billetera.txt.
   // Se llama al abrir y al cerrar el juego. (Valor de prueba: 99999999; para la entrega pon 0.)
   void reiniciar() {
-    saldo = 99999999;
+    saldo = 0;
     totalGanado = 0;
     guardar();
   }
