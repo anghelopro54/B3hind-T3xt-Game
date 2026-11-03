@@ -10,12 +10,14 @@ class PantallaIntro extends Pantalla {
     super("INTRO", crearFondoNegro(), 0);
   }
 
+  // Al entrar: empieza el video (si no hay video, pasa directo al menu)
   void reiniciar() {
     if (introVideo == null) { terminar(); return; }     // no hay video: directo al menu
     activa = true;
     introVideo.play();
   }
 
+  // Dibuja el cuadro actual del video y pasa al menu cuando termina
   void draw() {
     cursor(ARROW);
     if (!activa) return;
@@ -38,24 +40,28 @@ class PantallaIntro extends Pantalla {
     if (!activa && introVideo != null) return;
     activa = false;
     if (introVideo != null) introVideo.stop();
-    actual = 0;
-    pantallas[0].reiniciar();
+    actual = P_MENU;
+    pantallas[P_MENU].reiniciar();
   }
 
+  // Cualquier clic salta la intro
   int click() {
     terminar();
     return -1;
   }
 
+  // Cualquier tecla salta la intro
   void tecla(char k) {
     terminar();
   }
 
+  // ESC salta la intro en vez de cerrar el juego
   boolean capturaEsc() {
     return true;      // ESC salta la intro en vez de cerrar el juego
   }
 }
 
+// Fondo negro liso (la intro dibuja el video encima)
 PGraphics crearFondoNegro() {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();

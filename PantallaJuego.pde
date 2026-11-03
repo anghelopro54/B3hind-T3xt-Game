@@ -1,3 +1,7 @@
+// =====================================================================================
+// PantallaJuego: la CINEMATICA que se ve al pulsar JUGAR (historia de Ivana, dialogos que se escriben solos).
+// Al terminar lleva a la eleccion de modos. Clic = avanzar / mostrar el texto completo.
+// =====================================================================================
 class PantallaJuego extends Pantalla {
   String[] emisor = {"NARRADOR", "NARRADOR", "IVANA", "EMAIL", "IVANA", "NARRADOR"};
   String[] texto = {
@@ -23,26 +27,30 @@ class PantallaJuego extends Pantalla {
     escen[1] = escalarPantalla(crearEscenaEmail());        // correo Y2K
   }
 
+  // Al entrar, la cinematica empieza desde la primera linea
   void reiniciar() {
     linea = 0;
     iniciolinea = millis();
     cinematica = true;
   }
 
+  // Mientras dura la cinematica la dibuja; despues muestra los botones normales
   void draw() {
     if (cinematica) dibujarCinematica();
     else super.draw();
   }
 
+  // Clic: avanza la cinematica; al terminar lleva a la eleccion de modos
   int click() {
     if (cinematica) {
       avanzar();
-      if(!cinematica) return 4;
+      if (!cinematica) return P_MODOS;   // termino la historia: a elegir modo
       return -1;
     }
     return super.click();
   }
 
+  // Dibuja la escena de la linea actual y su dialogo (el texto aparece letra por letra)
   void dibujarCinematica() {
     image(escen[escena[linea]], offsetX, offsetY);
 
@@ -81,6 +89,7 @@ class PantallaJuego extends Pantalla {
     popStyle();
   }
 
+  // Clic: si el texto aun se esta escribiendo lo completa; si no, pasa a la siguiente linea (o termina)
   void avanzar() {
     int visible = int((millis() - iniciolinea) * 0.03);
 
@@ -95,6 +104,7 @@ class PantallaJuego extends Pantalla {
   }
 }
 
+// Fondo de respaldo (pantalla oscura con la palabra JUEGO)
 PGraphics crearFondoJuego() {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
@@ -109,16 +119,6 @@ PGraphics crearFondoJuego() {
   pg.endDraw();
 
   return pg;
-}
-
-// Dibuja una imagen en un PGraphics 1920x1080 llenando TODO el canvas (modo "cover"):
-// escala uniforme y recorta el sobrante centrado, sin deformar.
-void imagenCover(PGraphics pg, PImage img) {
-  float s = max((float) pg.width / img.width, (float) pg.height / img.height);
-  float w = img.width * s;
-  float h = img.height * s;
-  pg.imageMode(CORNER);
-  pg.image(img, (pg.width - w) / 2, (pg.height - h) / 2, w, h);
 }
 
 // Fondo del correo: Mail Background.jpg + parches que tapan el texto de ejemplo + texto propio

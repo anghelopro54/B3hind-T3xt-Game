@@ -1,4 +1,8 @@
+// =====================================================================================
 // Moralejas sobre la sana convivencia en redes sociales (se muestran al terminar el Modo 1 y el Modo 3).
+// Hay 4 frases por cada combinacion modo + ganar/perder; elegirMoraleja() saca una al azar.
+// Para agregar una frase, solo anade una linea a la lista que corresponda.
+// =====================================================================================
 
 String[] moralejasM1Gana = {
   "Detrás de cada perfil hay una persona. Bloquear el odio y apoyar lo sano hace de la red un lugar más seguro para todos.",

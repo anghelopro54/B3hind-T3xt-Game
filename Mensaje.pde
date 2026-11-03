@@ -1,4 +1,7 @@
-// Mensaje que cae por la pantalla del monitor. Puede ser toxico (hay que bloquear) o sano (aprobar).
+// =====================================================================================
+// Mensaje: una tarjeta que cae por la pantalla del monitor en el Modo 1.
+// Puede ser toxico (hay que bloquear) o sano (aprobar).
+// =====================================================================================
 final int TOXICO = 0;
 final int SANO = 1;
 
@@ -20,7 +23,7 @@ class Mensaje {
     this.velocidad = velocidad;
   }
 
-  // dt = segundos desde el ultimo cuadro
+  // Baja el mensaje. dt = segundos desde el ultimo cuadro (asi la velocidad no depende de los FPS)
   void mover(float dt) {
     y += velocidad * dt;
   }

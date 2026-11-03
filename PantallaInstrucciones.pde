@@ -1,27 +1,17 @@
+// =====================================================================================
+// Instrucciones de un modo: titulo + parrafos escritos sobre Instrucciones.jpg, con botones Jugar y Volver.
+// Se reutiliza para los dos modos; destinoJugar = pantalla a la que lleva el boton Jugar.
+// =====================================================================================
 class PantallaInstrucciones extends Pantalla {
   PantallaInstrucciones(String titulo, String[] parrafos, int destinoJugar) {
     super("INSTRUCCIONES", crearFondoInstrucciones(titulo, parrafos), 2);
     Ponerboton(0, new Boton("Jugar", 830, 815, 260, 70, fondo), destinoJugar);
-    Ponerboton(1, new Boton("Volver", 1700, 43, 200, 65, fondo), 4);   // 4 = eleccion de modos
+    Ponerboton(1, new Boton("Volver", 1700, 43, 200, 65, fondo), P_MODOS);   // vuelve a la eleccion de modos
   }
 }
 
 
-int contarLineas(PGraphics pg, String s, float ancho) {
-  String[] palabras = split(s, " ");
-  int lineas = 1;
-  String actual = "";
-  for (String p : palabras) {
-    String prueba = actual.length() == 0 ? p : actual + " " + p;
-    if (pg.textWidth(prueba) <= ancho) actual = prueba;
-    else {
-      lineas ++;
-      actual = p;
-    }
-  }
-  return lineas;
-}
-
+// Arma la imagen: fondo, texto con saltos de linea calculados y los dos botones dibujados
 PGraphics crearFondoInstrucciones(String titulo, String[] parrafos) {
   PGraphics pg = createGraphics(1920, 1080);
   pg.beginDraw();
@@ -48,25 +38,9 @@ PGraphics crearFondoInstrucciones(String titulo, String[] parrafos) {
     pg.text(p, x, y, ancho, n * 32 + 8);
     y += n * 32 + 12;                                 // el siguiente parrafo va debajo
   }
-  // boton Jugar (debajo de la ventana), mismo estilo que Volver
-  pg.fill(150, 179, 230);
-  pg.stroke(20, 20, 60);
-  pg.strokeWeight(6);
-  pg.rect(830, 815, 260, 70, 20);
-  pg.fill(20, 20, 60);
-  pg.textAlign(CENTER, CENTER);
-  pg.textSize(37);
-  pg.text("Jugar", 960, 850);
-
-  // boton Volver (arriba a la derecha, igual que en Configuracion y Creditos) -> eleccion de modos
-  pg.fill(150, 179, 230);
-  pg.stroke(20, 20, 60);
-  pg.strokeWeight(6);
-  pg.rect(1700, 43, 200, 65, 20);
-  pg.fill(20, 20, 60);
-  pg.textAlign(CENTER, CENTER);
-  pg.textSize(37);
-  pg.text("Volver", 1801, 75);
+  // botones (su posicion debe coincidir con los Boton de arriba): Jugar debajo de la ventana, Volver arriba a la derecha
+  dibujarBotonXP(pg, "Jugar", 830, 815, 260, 70);
+  dibujarBotonXP(pg, "Volver", 1700, 43, 200, 65);
 
   pg.endDraw();
   return pg;
